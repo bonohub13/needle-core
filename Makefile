@@ -16,6 +16,12 @@ generate-sbom:
 	$(CARGO) cyclonedx -f json -a
 	$(OSV_SCANNER) scan -r .
 
+fetch:
+	$(CARGO) fetch
+
+update:
+	$(CARGO) update
+
 docker-exec:
 	$(DOCKER) run --rm -it \
 		-v $(shell pwd):/app \
