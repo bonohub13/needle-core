@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPLv2
+
 use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
 use anyhow::{Context, Result};
 use std::sync::Arc;

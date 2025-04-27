@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPLv2
+
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 

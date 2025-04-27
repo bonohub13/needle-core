@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPLv2
+
 use chrono::{DateTime, Local, Timelike};
 use serde::Deserialize;
 use std::{

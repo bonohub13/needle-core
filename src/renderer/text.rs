@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPLv2
+
 use crate::{NeedleConfig, NeedleErr, NeedleError, Text};
 use anyhow::{bail, Result};
 use glyphon::{fontdb::Source, Buffer, FontSystem, SwashCache, TextAtlas, Viewport};

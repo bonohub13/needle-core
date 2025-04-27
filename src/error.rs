@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPLv2
+
 use crate::Position;
 use std::error::Error as StdError;
 use thiserror::Error;
