@@ -2,7 +2,7 @@
 name = "needle-core"
 version = "0.1.10"
 edition = "2021"
-license = "GPLv2"
+license = "GPL-2.0-only"
 
 [dependencies]
 anyhow = "1.0.93"

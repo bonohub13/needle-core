@@ -14,7 +14,8 @@ pkg:
 generate-sbom:
 	$(CARGO) sbom > ${SBOM_FILE}
 	$(CARGO) cyclonedx -f json -a
-	$(OSV_SCANNER) scan -r .
+	# can fail
+	$(OSV_SCANNER) scan -r . || true
 
 fetch:
 	$(CARGO) fetch

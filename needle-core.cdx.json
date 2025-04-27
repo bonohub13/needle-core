@@ -2,9 +2,9 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.3",
   "version": 1,
-  "serialNumber": "urn:uuid:f0d0e6ba-99aa-461f-a876-64b127e2a7b9",
+  "serialNumber": "urn:uuid:f0ba1b00-86d9-4e45-ac35-1c4a7c65e367",
   "metadata": {
-    "timestamp": "2025-04-27T13:13:43.870873903Z",
+    "timestamp": "2025-04-27T14:52:09.843955235Z",
     "tools": [
       {
         "vendor": "CycloneDX",
@@ -18,6 +18,11 @@
       "name": "needle-core",
       "version": "0.1.10",
       "scope": "required",
+      "licenses": [
+        {
+          "expression": "GPL-2.0-only"
+        }
+      ],
       "purl": "pkg:cargo/needle-core@0.1.10?download_url=file://.",
       "components": [
         {
