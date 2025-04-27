@@ -32,6 +32,6 @@ docker-exec:
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
 		-c "Kensuke Saito" \
-		-l GPLv2 \
+		-l GPL-2.0-only \
 		-s=only \
 		$(shell find src -type f -name "*.rs")

@@ -1,5 +1,5 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPLv2
+// SPDX-License-Identifier: GPL-2.0-only
 
 use crate::{NeedleConfig, NeedleErr, NeedleError, Text};
 use anyhow::{bail, Result};
