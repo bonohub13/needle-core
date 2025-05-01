@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 use crate::{NeedleErr, NeedleError, NeedleLabel};
-use anyhow::{bail, Result};
 use std::{
     fs::OpenOptions,
     io::Read,

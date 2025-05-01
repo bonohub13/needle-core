@@ -8,16 +8,26 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum NeedleError {
     // AppConfig
-    #[error("AppConfig | Invalid path")]
+    #[error("NeedleConfig | Invalid path")]
     InvalidPath,
-    #[error("AppConfig | Config already exists")]
+    #[error("NeedleConfig | Config already exists")]
     ConfigExists,
-    #[error("AppConfig | Config file doesn't exist ({0})")]
+    #[error("NeedleConfig | Config file doesn't exist ({0})")]
     ConfigNonExistant(Box<str>),
-    #[error("AppConfig | Text position is invalid. Must be corners. ({0})")]
+    #[error("NeedleConfig | Text position is invalid. Must be corners. ({0})")]
     InvalidFpsTextPosition(Position),
-    #[error("AppConfig | Text position for FPS and time is overlapping")]
+    #[error("NeedleConfig | Text position for FPS and time is overlapping")]
     TextPositionOverlapping,
+    #[error("NeedleConfig | Failed to open config file. ({0})")]
+    FailedToOpenConfig(Box<dyn StdError>),
+    #[error("NeedleConfig | Failed to read config file from path. ({0})")]
+    FailedToReadConfig(Box<dyn StdError>),
+    #[error("NeedleConfig | Failed to parse config file. ({0})")]
+    FailedToParseConfig(Box<dyn StdError>),
+    #[error("NeedleConfig | Failed to write config file to path. ({0})")]
+    FailedToWriteConfig(Box<dyn StdError>),
+    #[error("NeedleConfig | Failed to create directory to path. ({0})")]
+    FailedToCreateDirectory(Box<dyn StdError>),
 
     // Surface related errors
     #[error("Surface | Lost")]

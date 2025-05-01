@@ -11,8 +11,10 @@ pub use position::*;
 pub use text::*;
 pub use time::*;
 
-use crate::{error::NeedleError, TimeFormat};
-use anyhow::{bail, Result};
+use crate::{
+    error::{NeedleErr, NeedleError},
+    TimeFormat,
+};
 use directories::ProjectDirs;
 use serde::Deserialize;
 use std::{
@@ -37,7 +39,7 @@ impl<'a> NeedleConfig {
     const NEWLINE: &'a str = "\n";
     const CONFIG_FILE: &'a str = "config.toml";
 
-    pub fn config(path: Option<&str>) -> Result<()> {
+    pub fn config(path: Option<&str>) -> NeedleErr<()> {
         let default_config_file = Self::config_file(true)?;
         let config_file = if let Some(path) = path {
             if path.is_empty() {
@@ -52,7 +54,7 @@ impl<'a> NeedleConfig {
         Self::write(&config_file)
     }
 
-    pub fn from(path: Option<&str>) -> Result<Self> {
+    pub fn from(path: Option<&str>) -> NeedleErr<Self> {
         let default_config_file = Self::config_file(false)?;
         let config_file = if let Some(path) = path {
             if path.is_empty() {
@@ -70,53 +72,65 @@ impl<'a> NeedleConfig {
             } else {
                 let config_file = config_file.to_string_lossy();
 
-                bail!(NeedleError::ConfigNonExistant(config_file.into()))
+                return Err(NeedleError::ConfigNonExistant(config_file.into()));
             }
         }
 
-        let read = OpenOptions::new().read(true).open(config_file)?;
+        let read = match OpenOptions::new().read(true).open(config_file) {
+            Ok(file) => Ok(file),
+            Err(err) => Err(NeedleError::FailedToOpenConfig(err.into())),
+        }?;
         let mut buf_reader = BufReader::new(read);
         let mut read_buffer = String::new();
 
-        buf_reader.read_to_string(&mut read_buffer)?;
+        match buf_reader.read_to_string(&mut read_buffer) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(NeedleError::FailedToReadConfig(err.into())),
+        }?;
 
-        let config: Self = toml::from_str(&read_buffer)?;
+        let config: Self = match toml::from_str(&read_buffer) {
+            Ok(toml) => Ok(toml),
+            Err(err) => Err(NeedleError::FailedToParseConfig(err.into())),
+        }?;
 
         if config.fps.enable && !config.fps.is_valid_position() {
-            bail!(NeedleError::InvalidFpsTextPosition(
-                config.fps.config.position
+            Err(NeedleError::InvalidFpsTextPosition(
+                config.fps.config.position,
             ))
         } else if config.fps.enable && (config.fps.config.position == config.time.config.position) {
-            bail!(NeedleError::TextPositionOverlapping)
+            Err(NeedleError::TextPositionOverlapping)
         } else {
             Ok(config)
         }
     }
 
-    pub fn config_path(create_dir: bool, relative_path: Option<&str>) -> Result<PathBuf> {
+    pub fn config_path(create_dir: bool, relative_path: Option<&str>) -> NeedleErr<PathBuf> {
         let mut config_path: PathBuf;
         let relative_path = match relative_path {
-            Some(path) => path.split("/").collect::<Vec<_>>(),
-            None => bail!(NeedleError::InvalidPath),
-        };
+            Some(path) => Ok(path.split("/").collect::<Vec<_>>()),
+            None => Err(NeedleError::InvalidPath),
+        }?;
 
         match ProjectDirs::from("com", "bonohub13", "needle") {
             Some(app_dir) => {
                 if (!app_dir.config_dir().exists()) && create_dir {
-                    fs::create_dir_all(app_dir.config_dir())?;
+                    match fs::create_dir_all(app_dir.config_dir()) {
+                        Ok(_) => Ok(()),
+                        Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
+                    }?;
                 }
 
                 config_path = app_dir.config_dir().to_path_buf();
             }
-            None => bail!(NeedleError::InvalidPath),
-        };
+            None => return Err(NeedleError::InvalidPath),
+        }
 
         for rpath in relative_path {
             match rpath {
                 "." | "" | " " | "\t" => (),
                 ".." => {
                     if !config_path.pop() {
-                        bail!(NeedleError::InvalidPath)
+                        return Err(NeedleError::InvalidPath);
                     }
                 }
                 _ => config_path.push(rpath),
@@ -126,14 +140,14 @@ impl<'a> NeedleConfig {
         Ok(config_path)
     }
 
-    fn config_file(create_dir: bool) -> Result<PathBuf> {
+    fn config_file(create_dir: bool) -> NeedleErr<PathBuf> {
         Self::config_path(create_dir, Some(Self::CONFIG_FILE))
     }
 
-    fn write(file: &Path) -> Result<()> {
+    fn write(file: &Path) -> NeedleErr<()> {
         let default_config_path = Self::config_file(false)?;
         if file.exists() && file == default_config_path.as_path() {
-            bail!(NeedleError::ConfigExists)
+            return Err(NeedleError::ConfigExists);
         }
 
         let config = Self::default();
@@ -143,10 +157,16 @@ impl<'a> NeedleConfig {
 
             Ok(())
         } else {
-            let file = OpenOptions::new().write(true).create(true).open(file)?;
+            let file = match OpenOptions::new().write(true).create(true).open(file) {
+                Ok(file) => Ok(file),
+                Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
+            }?;
             let mut buf_writer = BufWriter::new(file);
 
-            Ok(writeln!(buf_writer, "{}", config)?)
+            match writeln!(buf_writer, "{}", config) {
+                Ok(_) => Ok(()),
+                Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
+            }
         }
     }
 }

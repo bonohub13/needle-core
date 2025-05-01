@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 use crate::{NeedleConfig, NeedleErr, NeedleError, Text};
-use anyhow::{bail, Result};
 use glyphon::{fontdb::Source, Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
 use std::path::PathBuf;
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
@@ -29,7 +28,7 @@ impl TextRenderer {
         queue: &wgpu::Queue,
         format: wgpu::TextureFormat,
         depth_stencil: Option<wgpu::DepthStencilState>,
-    ) -> Result<Self> {
+    ) -> NeedleErr<Self> {
         let mut system = match font {
             Some(font_name) => {
                 let font = Self::find_font(&font_name)?;
@@ -104,13 +103,13 @@ impl TextRenderer {
         self.atlas.trim()
     }
 
-    fn find_font(font_name: &str) -> Result<PathBuf> {
+    fn find_font(font_name: &str) -> NeedleErr<PathBuf> {
         let config_path = NeedleConfig::config_path(true, Some(&format!("fonts/{}", font_name)))?;
 
         if config_path.exists() {
             Ok(config_path)
         } else {
-            bail!(NeedleError::InvalidPath)
+            Err(NeedleError::InvalidPath)
         }
     }
 }
