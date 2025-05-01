@@ -38,6 +38,8 @@ pub enum NeedleError {
     InvalidBufferRegistration,
     #[error("Renderer | Buffer without bind group/bind group layout has been registered ({0})")]
     RendererUpdateFailure(Box<dyn StdError>),
+    #[error("Renderer | Failed to read specified shader file (SPIR-V: {0})")]
+    FailedToReadShader(Box<dyn StdError>),
 
     // cURL related errors
     #[error("URL | Invalid URL format detected")]

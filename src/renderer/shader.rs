@@ -34,13 +34,13 @@ impl ShaderRenderer {
         index_buffers: Option<wgpu::Buffer>,
         depth_stencil: Option<wgpu::DepthStencilState>,
         label: Option<&str>,
-    ) -> Result<Self> {
+    ) -> NeedleErr<Self> {
         // Each buffer must have their bind group layout and bind group
         if vertex_buffers.len() != vertex_buffer_layouts.len() {
-            bail!(NeedleError::InvalidBufferRegistration);
+            return Err(NeedleError::InvalidBufferRegistration);
         }
         if indices.is_some() != index_buffers.is_some() {
-            bail!(NeedleError::InvalidBufferRegistration);
+            return Err(NeedleError::InvalidBufferRegistration);
         }
 
         let label = match label {
@@ -131,11 +131,17 @@ impl ShaderRenderer {
         &self.vertex_buffers[index]
     }
 
-    fn read_shader(path: &Path) -> Result<Box<[u8]>> {
-        let mut reader = OpenOptions::new().read(true).open(path)?;
+    fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
+        let mut reader = match OpenOptions::new().read(true).open(path) {
+            Ok(file) => Ok(file),
+            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
+        }?;
         let mut buffer = vec![];
 
-        reader.read_to_end(&mut buffer)?;
+        match reader.read_to_end(&mut buffer) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
+        }?;
         if (buffer.len() & 4) != 0 {
             for _ in 0..(buffer.len() % 4) {
                 buffer.push(0);
