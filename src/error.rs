@@ -7,6 +7,14 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum NeedleError {
+    // AppBase
+    #[error("InitializationError | Failed to create surface. ({0})")]
+    FailedToCreateSurface(wgpu::CreateSurfaceError),
+    #[error("InitializationError | Failed to wgpu::Adapter supported by surface.")]
+    FailedToFindValidAdapter,
+    #[error("InitializationError | Failed to request device. ({0})")]
+    FailedToRequestDevice(wgpu::RequestDeviceError),
+
     // AppConfig
     #[error("NeedleConfig | Invalid path")]
     InvalidPath,

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
-use anyhow::{Context, Result};
 use std::sync::Arc;
 use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
@@ -16,7 +15,7 @@ pub struct AppBase<'a> {
 }
 
 impl<'a> AppBase<'a> {
-    pub async fn new(window: Arc<Window>) -> Result<Self> {
+    pub async fn new(window: Arc<Window>) -> NeedleErr<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
@@ -24,22 +23,32 @@ impl<'a> AppBase<'a> {
         });
 
         // Surface
-        let surface = instance.create_surface(window)?;
+        let surface = match instance.create_surface(window) {
+            Ok(surface) => Ok(surface),
+            Err(e) => Err(NeedleError::FailedToCreateSurface(e)),
+        }?;
 
         // Device and Queue
         let adapters = instance.enumerate_adapters(wgpu::Backends::all());
-        let adapter = adapters
+        let adapter = match adapters
             .iter()
             .filter(|adapter| adapter.is_surface_supported(&surface))
             .next()
-            .context("Failed to find valid adapter")?;
-        let (device, queue) = adapter
+        {
+            Some(adapter) => Ok(adapter),
+            None => Err(NeedleError::FailedToFindValidAdapter),
+        }?;
+        let (device, queue) = match adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: None,
                 required_features: wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                 ..Default::default()
             })
-            .await?;
+            .await
+        {
+            Ok((device, queue)) => Ok((device, queue)),
+            Err(err) => Err(NeedleError::FailedToRequestDevice(err)),
+        }?;
 
         // Config
         let surface_caps = surface.get_capabilities(&adapter);

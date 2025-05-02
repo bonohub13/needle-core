@@ -5,7 +5,6 @@ edition = "2021"
 license = "GPL-2.0-only"
 
 [dependencies]
-anyhow = "1.0.93"
 bytemuck = "1.20.0"
 chrono = "0.4.38"
 directories = "6.0.0"
