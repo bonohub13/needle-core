@@ -3,7 +3,7 @@
 
 use crate::{NeedleConfig, NeedleErr, NeedleError, Text};
 use glyphon::{fontdb::Source, Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 
@@ -104,10 +104,18 @@ impl TextRenderer {
     }
 
     fn find_font(font_name: &str) -> NeedleErr<PathBuf> {
-        let config_path = NeedleConfig::config_path(true, Some(&format!("fonts/{}", font_name)))?;
+        let config_path = NeedleConfig::config_path(true, Some("fonts/"))?;
+        let font_path = NeedleConfig::config_path(true, Some(&format!("fonts/{}", font_name)))?;
 
-        if config_path.exists() {
-            Ok(config_path)
+        if !config_path.exists() {
+            match fs::create_dir(config_path) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(NeedleError::FailedToCreateDirectory(e.into())),
+            }?
+        }
+
+        if font_path.exists() {
+            Ok(font_path)
         } else {
             Err(NeedleError::InvalidPath)
         }
