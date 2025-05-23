@@ -23,12 +23,8 @@ fetch:
 update:
 	$(CARGO) update
 
-docker-exec:
-	$(DOCKER) run --rm -it \
-		-v $(shell pwd):/app \
-		-v ${CARGO_REGISTRY}:/usr/local/cargo/registry \
-		${DOCKER_IMAGE}:${TAG} \
-		bash -c "$(CMD)"
+build:
+	$(CARGO) build --release
 
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
@@ -36,3 +32,10 @@ addlicense:
 		-l GPL-2.0-only \
 		-s=only \
 		$(shell find src -type f -name "*.rs")
+
+docker-exec:
+	$(DOCKER) run --rm -it \
+		-v $(shell pwd):/app \
+		-v ${CARGO_REGISTRY}:/usr/local/cargo/registry \
+		${DOCKER_IMAGE}:${TAG} \
+		bash -c "$(CMD)"
