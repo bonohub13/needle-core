@@ -23,6 +23,12 @@ fetch:
 update:
 	$(CARGO) update
 
+clippy:
+	$(CARGO) clippy
+
+clean:
+	$(CARGO) clean
+
 build:
 	$(CARGO) build --release
 
