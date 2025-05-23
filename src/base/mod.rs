@@ -6,7 +6,7 @@ use std::sync::Arc;
 use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
-pub struct AppBase<'a> {
+pub struct State<'a> {
     size: PhysicalSize<u32>,
     surface: Surface<'a>,
     device: Device,
@@ -14,7 +14,7 @@ pub struct AppBase<'a> {
     config: SurfaceConfiguration,
 }
 
-impl<'a> AppBase<'a> {
+impl<'a> State<'a> {
     pub async fn new(window: Arc<Window>) -> NeedleErr<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -32,8 +32,7 @@ impl<'a> AppBase<'a> {
         let adapters = instance.enumerate_adapters(wgpu::Backends::all());
         let adapter = match adapters
             .iter()
-            .filter(|adapter| adapter.is_surface_supported(&surface))
-            .next()
+            .find(|adapter| adapter.is_surface_supported(&surface))
         {
             Some(adapter) => Ok(adapter),
             None => Err(NeedleError::FailedToFindValidAdapter),
@@ -51,7 +50,7 @@ impl<'a> AppBase<'a> {
         }?;
 
         // Config
-        let surface_caps = surface.get_capabilities(&adapter);
+        let surface_caps = surface.get_capabilities(adapter);
         let surface_format = surface_caps
             .formats
             .iter()
