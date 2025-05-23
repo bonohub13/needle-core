@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use crate::{NeedleConfig, NeedleErr, NeedleError, Text};
+use crate::{NeedleConfig, NeedleErr, NeedleError, State, Text};
 use glyphon::{fontdb::Source, Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
 use std::{fs, path::PathBuf};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
@@ -20,19 +20,18 @@ pub struct TextRenderer {
 
 impl TextRenderer {
     pub fn new(
+        state: &State,
         config: &Text,
         font: Option<String>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
         format: wgpu::TextureFormat,
         depth_stencil: Option<wgpu::DepthStencilState>,
     ) -> NeedleErr<Self> {
         let mut system = match font {
             Some(font_name) => {
                 let font = Self::find_font(&font_name)?;
-                let mut system = FontSystem::new_with_fonts([Source::File(font)].into_iter());
+                let mut system = FontSystem::new_with_fonts([Source::File(font)]);
 
                 system
                     .db_mut()
@@ -43,12 +42,12 @@ impl TextRenderer {
             None => FontSystem::new(),
         };
         let swash_cache = SwashCache::new();
-        let cache = glyphon::Cache::new(device);
-        let viewport = Viewport::new(device, &cache);
-        let mut atlas = TextAtlas::new(device, queue, &cache, format);
+        let cache = glyphon::Cache::new(state.device());
+        let viewport = Viewport::new(state.device(), &cache);
+        let mut atlas = TextAtlas::new(state.device(), state.queue(), &cache, format);
         let renderer = glyphon::TextRenderer::new(
             &mut atlas,
-            device,
+            state.device(),
             wgpu::MultisampleState::default(),
             depth_stencil,
         );
@@ -179,14 +178,12 @@ impl super::Renderer for TextRenderer {
             .render(&self.atlas, &self.viewport, render_pass)
         {
             Ok(_) => Ok(()),
-            Err(err) => {
-                return match err {
-                    glyphon::RenderError::RemovedFromAtlas => Err(NeedleError::RemovedFromAtlas),
-                    glyphon::RenderError::ScreenResolutionChanged => {
-                        Err(NeedleError::ScreenResolutionChanged)
-                    }
+            Err(err) => match err {
+                glyphon::RenderError::RemovedFromAtlas => Err(NeedleError::RemovedFromAtlas),
+                glyphon::RenderError::ScreenResolutionChanged => {
+                    Err(NeedleError::ScreenResolutionChanged)
                 }
-            }
+            },
         }
     }
 }

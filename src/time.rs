@@ -183,9 +183,9 @@ impl Time {
 
         let mut prefix = String::new();
 
-        for i in 1..digit.into() {
+        for i in 1..digit {
             if value < 10u32.pow(i) {
-                prefix = prefix + "0";
+                prefix += "0";
             }
         }
 

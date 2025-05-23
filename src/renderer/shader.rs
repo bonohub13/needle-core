@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use crate::{NeedleErr, NeedleError, NeedleLabel};
+use crate::{NeedleErr, NeedleError, NeedleLabel, State};
 use std::{
     fs::OpenOptions,
     io::Read,
@@ -21,101 +21,107 @@ pub struct ShaderRenderer {
     pipeline: RenderPipeline,
 }
 
+#[derive(Debug)]
+pub struct ShaderRendererDescriptor<'desc> {
+    pub vert_shader_path: PathBuf,
+    pub frag_shader_path: PathBuf,
+    pub vertex_buffers: &'desc [wgpu::Buffer],
+    pub vertex_buffer_layouts: &'desc [wgpu::VertexBufferLayout<'desc>],
+    pub indices: Option<(i32, Box<[u16]>)>,
+    pub index_buffers: Option<wgpu::Buffer>,
+    pub depth_stencil: Option<wgpu::DepthStencilState>,
+    pub label: Option<&'desc str>,
+}
+
 impl ShaderRenderer {
-    pub fn new(
-        device: &wgpu::Device,
-        surface_config: &wgpu::SurfaceConfiguration,
-        vert_shader_path: PathBuf,
-        frag_shader_path: PathBuf,
-        vertex_buffers: Vec<wgpu::Buffer>,
-        vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout>,
-        indices: Option<(i32, Box<[u16]>)>,
-        index_buffers: Option<wgpu::Buffer>,
-        depth_stencil: Option<wgpu::DepthStencilState>,
-        label: Option<&str>,
-    ) -> NeedleErr<Self> {
+    pub fn new(state: &State, desc: &ShaderRendererDescriptor) -> NeedleErr<Self> {
         // Each buffer must have their bind group layout and bind group
-        if vertex_buffers.len() != vertex_buffer_layouts.len() {
+        if desc.vertex_buffers.len() != desc.vertex_buffer_layouts.len() {
             return Err(NeedleError::InvalidBufferRegistration);
         }
-        if indices.is_some() != index_buffers.is_some() {
+        if desc.indices.is_some() != desc.index_buffers.is_some() {
             return Err(NeedleError::InvalidBufferRegistration);
         }
 
-        let label = match label {
+        let label = match desc.label {
             Some(label) => label.to_string(),
             None => "Render".to_string(),
         };
-        let vert_shader_code = Self::read_shader(&vert_shader_path)?;
-        let frag_shader_code = Self::read_shader(&frag_shader_path)?;
+        let vert_shader_code = Self::read_shader(&desc.vert_shader_path)?;
+        let frag_shader_code = Self::read_shader(&desc.frag_shader_path)?;
         let vert_shader = unsafe {
-            device.create_shader_module_passthrough(wgpu::ShaderModuleDescriptorPassthrough::SpirV(
-                wgpu::ShaderModuleDescriptorSpirV {
+            state.device().create_shader_module_passthrough(
+                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
                     label: Some(&NeedleLabel::Shader("Vertex").to_string()),
                     source: wgpu::util::make_spirv_raw(&vert_shader_code),
-                },
-            ))
+                }),
+            )
         };
         let frag_shader = unsafe {
-            device.create_shader_module_passthrough(wgpu::ShaderModuleDescriptorPassthrough::SpirV(
-                wgpu::ShaderModuleDescriptorSpirV {
+            state.device().create_shader_module_passthrough(
+                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
                     label: Some(&NeedleLabel::Shader("Fragment").to_string()),
                     source: wgpu::util::make_spirv_raw(&frag_shader_code),
-                },
-            ))
+                }),
+            )
         };
         let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some(&NeedleLabel::PipelineLayout(&label).to_string()),
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
-            });
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(&NeedleLabel::Pipeline(&label).to_string()),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &vert_shader,
-                entry_point: Some("main"),
-                buffers: &vertex_buffer_layouts,
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &frag_shader,
-                entry_point: Some("main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: surface_config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                unclipped_depth: false,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                conservative: false,
-            },
-            depth_stencil,
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-            cache: None,
-        });
+            state
+                .device()
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some(&NeedleLabel::PipelineLayout(&label).to_string()),
+                    bind_group_layouts: &[],
+                    push_constant_ranges: &[],
+                });
+        let render_pipeline =
+            state
+                .device()
+                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some(&NeedleLabel::Pipeline(&label).to_string()),
+                    layout: Some(&render_pipeline_layout),
+                    vertex: wgpu::VertexState {
+                        module: &vert_shader,
+                        entry_point: Some("main"),
+                        buffers: desc.vertex_buffer_layouts,
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module: &frag_shader,
+                        entry_point: Some("main"),
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                        targets: &[Some(wgpu::ColorTargetState {
+                            format: state.surface_config().format,
+                            blend: Some(wgpu::BlendState::REPLACE),
+                            write_mask: wgpu::ColorWrites::ALL,
+                        })],
+                    }),
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        strip_index_format: None,
+                        front_face: wgpu::FrontFace::Ccw,
+                        cull_mode: Some(wgpu::Face::Back),
+                        unclipped_depth: false,
+                        polygon_mode: wgpu::PolygonMode::Fill,
+                        conservative: false,
+                    },
+                    depth_stencil: desc.depth_stencil.clone(),
+                    multisample: wgpu::MultisampleState {
+                        count: 1,
+                        mask: !0,
+                        alpha_to_coverage_enabled: false,
+                    },
+                    multiview: None,
+                    cache: None,
+                });
 
         Ok(Self {
             _vert_shader_code: vert_shader_code,
             _frag_shader_code: frag_shader_code,
             _vert_shader: vert_shader,
             _frag_shader: frag_shader,
-            vertex_buffers,
-            indices,
-            index_buffers,
+            vertex_buffers: desc.vertex_buffers.to_vec(),
+            indices: desc.indices.clone(),
+            index_buffers: desc.index_buffers.clone(),
             pipeline: render_pipeline,
         })
     }
@@ -142,9 +148,7 @@ impl ShaderRenderer {
             Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
         }?;
         if (buffer.len() & 4) != 0 {
-            for _ in 0..(buffer.len() % 4) {
-                buffer.push(0);
-            }
+            buffer.extend(std::iter::repeat_n(0, buffer.len() % 4));
         }
 
         let buffer = Box::from_iter(buffer);

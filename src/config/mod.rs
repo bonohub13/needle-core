@@ -51,7 +51,7 @@ impl<'a> NeedleConfig {
             &default_config_file
         };
 
-        Self::write(&config_file)
+        Self::write(config_file)
     }
 
     pub fn from(path: Option<&str>) -> NeedleErr<Self> {
@@ -67,7 +67,7 @@ impl<'a> NeedleConfig {
         };
 
         if !config_file.exists() {
-            if config_file == &default_config_file {
+            if config_file == default_config_file {
                 Self::config(None)?;
             } else {
                 let config_file = config_file.to_string_lossy();
@@ -157,7 +157,12 @@ impl<'a> NeedleConfig {
 
             Ok(())
         } else {
-            let file = match OpenOptions::new().write(true).create(true).open(file) {
+            let file = match OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(file)
+            {
                 Ok(file) => Ok(file),
                 Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
             }?;
