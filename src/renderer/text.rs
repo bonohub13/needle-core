@@ -7,21 +7,21 @@ use std::{fs, path::PathBuf};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 
-pub struct TextRenderer<'config> {
+pub struct TextRenderer {
     system: FontSystem,
     swash_cache: SwashCache,
     viewport: Viewport,
     atlas: TextAtlas,
     renderer: glyphon::TextRenderer,
     buffer: Buffer,
-    config: &'config Text,
+    config: Text,
     size: PhysicalSize<u32>,
 }
 
-impl<'config> TextRenderer<'config> {
+impl TextRenderer {
     pub fn new(
         state: &State,
-        config: &'config Text,
+        config: &Text,
         font: Option<String>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
@@ -65,7 +65,7 @@ impl<'config> TextRenderer<'config> {
             atlas,
             renderer,
             buffer,
-            config,
+            config: *config,
             size: *size,
         })
     }
@@ -73,6 +73,11 @@ impl<'config> TextRenderer<'config> {
     #[inline]
     pub const fn scale(&self) -> f32 {
         self.config.scale
+    }
+
+    #[inline]
+    pub const fn set_config(&mut self, config: &NeedleConfig) {
+        self.config = config.time.config
     }
 
     pub fn text_size(&self) -> [f32; 2] {
@@ -121,7 +126,7 @@ impl<'config> TextRenderer<'config> {
     }
 }
 
-impl super::Renderer for TextRenderer<'_> {
+impl super::Renderer for TextRenderer {
     fn resize(&mut self, size: &PhysicalSize<u32>) {
         self.size = *size
     }
