@@ -140,6 +140,25 @@ impl<'a> NeedleConfig {
         Ok(config_path)
     }
 
+    pub fn save_config(&self) -> NeedleErr<()> {
+        let default_config_file = Self::config_file(false)?;
+        let file = match OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(default_config_file)
+        {
+            Ok(file) => Ok(file),
+            Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
+        }?;
+        let mut buf_writer = BufWriter::new(file);
+
+        match writeln!(buf_writer, "{}", self) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
+        }
+    }
+
     fn config_file(create_dir: bool) -> NeedleErr<PathBuf> {
         Self::config_path(create_dir, Some(Self::CONFIG_FILE))
     }
