@@ -17,6 +17,23 @@ pub enum Position {
     BottomLeft,
 }
 
+impl From<i32> for Position {
+    fn from(val: i32) -> Self {
+        match val {
+            0 => Self::TopLeft,
+            1 => Self::Top,
+            2 => Self::TopRight,
+            3 => Self::Left,
+            4 => Self::Center,
+            5 => Self::Right,
+            6 => Self::BottomLeft,
+            7 => Self::Bottom,
+            8 => Self::BottomRight,
+            _ => Self::Center,
+        }
+    }
+}
+
 impl Display for Position {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let position = match self {
