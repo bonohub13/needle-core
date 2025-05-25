@@ -30,6 +30,7 @@ pub fn version_info() -> String {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum NeedleLabel<'a> {
+    ImguiWindow(&'a str),
     Device(&'a str),
     PipelineLayout(&'a str),
     Pipeline(&'a str),
@@ -48,6 +49,13 @@ pub enum NeedleLabel<'a> {
 impl<'a> Display for NeedleLabel<'a> {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let label = match self {
+            Self::ImguiWindow(label) => {
+                if label.is_empty() {
+                    "Imgui Window".to_string()
+                } else {
+                    format!("{} Imgui Window", label)
+                }
+            }
             Self::Device(label) => {
                 if label.is_empty() {
                     "Device".to_string()
