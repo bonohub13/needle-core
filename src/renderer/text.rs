@@ -7,21 +7,21 @@ use std::{fs, path::PathBuf};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 
-pub struct TextRenderer {
+pub struct TextRenderer<'config> {
     system: FontSystem,
     swash_cache: SwashCache,
     viewport: Viewport,
     atlas: TextAtlas,
     renderer: glyphon::TextRenderer,
     buffer: Buffer,
-    config: Text,
+    config: &'config Text,
     size: PhysicalSize<u32>,
 }
 
-impl TextRenderer {
+impl<'config> TextRenderer<'config> {
     pub fn new(
         state: &State,
-        config: &Text,
+        config: &'config Text,
         font: Option<String>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
@@ -65,7 +65,7 @@ impl TextRenderer {
             atlas,
             renderer,
             buffer,
-            config: *config,
+            config,
             size: *size,
         })
     }
@@ -121,7 +121,7 @@ impl TextRenderer {
     }
 }
 
-impl super::Renderer for TextRenderer {
+impl super::Renderer for TextRenderer<'_> {
     fn resize(&mut self, size: &PhysicalSize<u32>) {
         self.size = *size
     }
