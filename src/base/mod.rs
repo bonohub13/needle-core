@@ -106,11 +106,25 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn render<F: FnOnce(&wgpu::SurfaceTexture, &mut wgpu::CommandEncoder) -> NeedleErr<()>>(
-        &mut self,
-        render_func: F,
-    ) -> NeedleErr<()> {
-        let output = match self.surface.get_current_texture() {
+    pub fn render<F>(&mut self, render_func: F) -> NeedleErr<()>
+    where
+        F: FnOnce(&mut wgpu::CommandEncoder) -> NeedleErr<()>,
+    {
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some(&NeedleLabel::CommandEncoder("").to_string()),
+            });
+
+        render_func(&mut encoder)?;
+
+        self.queue.submit(std::iter::once(encoder.finish()));
+
+        Ok(())
+    }
+
+    pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
+        match self.surface.get_current_texture() {
             Ok(texture) => Ok(texture),
             Err(err) => {
                 let err = match err {
@@ -123,19 +137,7 @@ impl<'a> State<'a> {
 
                 Err(err)
             }
-        }?;
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some(&NeedleLabel::CommandEncoder("").to_string()),
-            });
-
-        render_func(&output, &mut encoder)?;
-
-        self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
-
-        Ok(())
+        }
     }
 
     pub fn create_vertex_buffer(&self, label: &str, vertices: &[Vertex]) -> wgpu::Buffer {
