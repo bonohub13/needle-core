@@ -136,6 +136,19 @@ impl ShaderRenderer {
         &self.vertex_buffers[index]
     }
 
+    pub fn set_vertex_buffer(&mut self, buffer: &[Buffer]) -> NeedleErr<()> {
+        if buffer.len() != self.vertex_buffers.len() {
+            Err(NeedleError::InvalidBufferRegistration)
+        } else {
+            self.vertex_buffers.iter_mut().for_each(|buf| {
+                buf.destroy();
+            });
+            self.vertex_buffers = buffer.to_vec();
+
+            Ok(())
+        }
+    }
+
     fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
         let mut reader = match OpenOptions::new().read(true).open(path) {
             Ok(file) => Ok(file),
