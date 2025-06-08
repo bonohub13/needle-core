@@ -6,6 +6,9 @@ mod position;
 mod text;
 mod time;
 
+#[cfg(test)]
+mod test;
+
 pub use fps::*;
 pub use position::*;
 pub use text::*;
