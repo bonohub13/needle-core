@@ -48,16 +48,16 @@ impl Vertex {
         ];
         /* Order to draw
          * Top left
-         * Top right
          * Bottom left
+         * Top right
          * ---
          * Top right
-         * Bottom right
          * Bottom left
+         * Bottom right
          */
         let indices = [
-            0, 1, 3, // Upper left triangle
-            1, 2, 3, // Lower bottom triangle
+            0, 3, 1, // Upper left triangle
+            1, 3, 2, // Lower bottom triangle
         ];
 
         (vertices, indices.into())
