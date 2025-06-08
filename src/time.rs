@@ -63,6 +63,10 @@ impl Time {
         }
     }
 
+    pub fn set_format(&mut self, format: TimeFormat) {
+        self.format = format;
+    }
+
     pub fn toggle_timer(&mut self) {
         match self.mode {
             OpMode::CountDownTimer(duration) => {
@@ -127,7 +131,14 @@ impl Time {
                 self.duration_to_str(&delta)
             }
             OpMode::CountUpTimer => {
-                let delta = Instant::now() - self.start_time;
+                let delta = if self.started {
+                    Instant::now() - self.start_time
+                } else if let Some(time) = self.stop_time {
+                    time - self.start_time
+                } else {
+                    // Count up timer hasn't been started
+                    Duration::new(0, 0)
+                };
 
                 self.duration_to_str(&delta)
             }
