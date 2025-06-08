@@ -44,12 +44,18 @@ impl Time {
         }
     }
 
+    #[inline]
+    pub fn mode(&self) -> OpMode {
+        self.mode.clone()
+    }
+
     pub fn set_mode(&mut self, mode: OpMode) {
         if self.mode != mode {
             self.mode = mode;
 
             match self.mode {
                 OpMode::CountDownTimer(_) | OpMode::CountUpTimer => {
+                    self.started = false;
                     self.start_time = Instant::now();
                 }
                 _ => (),
@@ -98,10 +104,6 @@ impl Time {
             }
             _ => (),
         }
-    }
-
-    pub fn mode(&self) -> OpMode {
-        self.mode.clone()
     }
 
     pub fn current_time(&self) -> String {
