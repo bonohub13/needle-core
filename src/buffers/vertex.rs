@@ -23,11 +23,11 @@ impl Vertex {
         let (min_x, min_y) = (crop(offset[0], 1.0) - 1.0, crop(offset[1], 1.0) - 1.0);
         let vertices = vec![
             Vertex::new([min_x, min_y, depth], *color),     // Top left
-            Vertex::new([size[0], min_y, depth], *color),   // Top Right
             Vertex::new([min_x, size[1], depth], *color),   // Bottom left
             Vertex::new([size[0], min_y, depth], *color),   // Top Right
+            Vertex::new([size[0], min_y, depth], *color),   // Top Right
+            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
             Vertex::new([size[0], size[1], depth], *color), // Bottom right
-            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
         ];
 
         vertices
