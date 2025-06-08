@@ -24,11 +24,11 @@ impl Vertex {
 
         vec![
             Vertex::new([min_x, min_y, depth], *color),     // Top left
-            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
-            Vertex::new([size[0], min_y, depth], *color),   // Top Right
             Vertex::new([size[0], min_y, depth], *color),   // Top Right
             Vertex::new([min_x, size[1], depth], *color),   // Bottom left
+            Vertex::new([size[0], min_y, depth], *color),   // Top Right
             Vertex::new([size[0], size[1], depth], *color), // Bottom right
+            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
         ]
     }
 
@@ -48,16 +48,16 @@ impl Vertex {
         let indices =
             /* Order to draw
              * Top left
-             * Bottom left
              * Top right
+             * Bottom left
              * ---
              * Top right
-             * Bottom left
              * Bottom right
+             * Bottom left
              */
             [
-                0, 1, 3, // Upper left triangle
-                1, 2, 3, // Lower right triangle
+                0, 3, 1, // Upper left triangle
+                1, 3, 2, // Lower right triangle
             ];
 
         (vertices, indices.into())
