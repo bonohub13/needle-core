@@ -4,9 +4,9 @@
 use crate::NeedleLabel;
 
 pub struct Texture {
-    texture: wgpu::Texture,
     view: wgpu::TextureView,
-    sampler: wgpu::Sampler,
+    _texture: wgpu::Texture,
+    _sampler: wgpu::Sampler,
 }
 
 impl Texture {
@@ -47,10 +47,11 @@ impl Texture {
             lod_max_clamp: 100.0,
             ..Default::default()
         });
+
         Self {
-            texture,
             view,
-            sampler,
+            _texture: texture,
+            _sampler: sampler,
         }
     }
 
