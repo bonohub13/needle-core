@@ -21,16 +21,26 @@ impl Vertex {
 
     pub fn rectangle(size: [f32; 2], offset: [f32; 2], depth: f32, color: &[f32; 4]) -> Vec<Self> {
         let (min_x, min_y) = (crop(offset[0], 1.0) - 1.0, crop(offset[1], 1.0) - 1.0);
-        let vertices = vec![
-            Vertex::new([min_x, min_y, depth], *color),     // Top left
-            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
-            Vertex::new([size[0], min_y, depth], *color),   // Top Right
-            Vertex::new([size[0], min_y, depth], *color),   // Top Right
-            Vertex::new([min_x, size[1], depth], *color),   // Bottom left
-            Vertex::new([size[0], size[1], depth], *color), // Bottom right
-        ];
 
-        vertices
+        if cfg!(target_os = "windows") {
+            vec![
+                Vertex::new([min_x, min_y, depth], *color),     // Top left
+                Vertex::new([size[0], min_y, depth], *color),   // Top Right
+                Vertex::new([min_x, size[1], depth], *color),   // Bottom left
+                Vertex::new([size[0], min_y, depth], *color),   // Top Right
+                Vertex::new([size[0], size[1], depth], *color), // Bottom right
+                Vertex::new([min_x, size[1], depth], *color),   // Bottom left
+            ]
+        } else {
+            vec![
+                Vertex::new([min_x, min_y, depth], *color),     // Top left
+                Vertex::new([min_x, size[1], depth], *color),   // Bottom left
+                Vertex::new([size[0], min_y, depth], *color),   // Top Right
+                Vertex::new([size[0], min_y, depth], *color),   // Top Right
+                Vertex::new([min_x, size[1], depth], *color),   // Bottom left
+                Vertex::new([size[0], size[1], depth], *color), // Bottom right
+            ]
+        }
     }
 
     pub fn indexed_rectangle(
@@ -46,19 +56,35 @@ impl Vertex {
             Vertex::new([size[0], size[1], depth], *color), // Bottom right
             Vertex::new([min_x, size[1], depth], *color),   // Bottom left
         ];
-        /* Order to draw
-         * Top left
-         * Bottom left
-         * Top right
-         * ---
-         * Top right
-         * Bottom left
-         * Bottom right
-         */
-        let indices = [
-            0, 3, 1, // Upper left triangle
-            1, 3, 2, // Lower bottom triangle
-        ];
+        let indices = if cfg!(target_os = "windows") {
+            /* Order to draw
+             * Top left
+             * Top right
+             * Bottom left
+             * ---
+             * Top right
+             * Bottom right
+             * Bottom left
+             */
+            [
+                0, 1, 3, // Upper left triangle
+                1, 2, 3, // Lower bottom triangle
+            ]
+        } else {
+            /* Order to draw
+             * Top left
+             * Bottom left
+             * Top right
+             * ---
+             * Top right
+             * Bottom left
+             * Bottom right
+             */
+            [
+                0, 3, 1, // Upper left triangle
+                1, 3, 2, // Lower bottom triangle
+            ]
+        };
 
         (vertices, indices.into())
     }
