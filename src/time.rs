@@ -263,3 +263,15 @@ op_mode_impl_from! { i16 }
 op_mode_impl_from! { u16 }
 op_mode_impl_from! { i32 }
 op_mode_impl_from! { u32 }
+
+impl Display for OpMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let format = match self {
+            OpMode::Clock => "Clock",
+            OpMode::CountDownTimer(_) => "CountDownTimer",
+            OpMode::CountUpTimer => "CountUpTimer",
+        };
+
+        write!(f, "{}", format)
+    }
+}
