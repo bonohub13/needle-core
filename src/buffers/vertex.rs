@@ -67,8 +67,8 @@ impl Vertex {
              * Bottom left
              */
             [
-                0, 1, 3, // Upper left triangle
-                1, 2, 3, // Lower bottom triangle
+                0, 3, 1, // Upper left triangle
+                1, 3, 2, // Lower right triangle
             ]
         } else {
             /* Order to draw
@@ -81,8 +81,8 @@ impl Vertex {
              * Bottom right
              */
             [
-                0, 3, 1, // Upper left triangle
-                1, 3, 2, // Lower bottom triangle
+                0, 1, 3, // Upper left triangle
+                1, 2, 3, // Lower right triangle
             ]
         };
 
