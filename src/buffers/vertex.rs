@@ -56,8 +56,8 @@ impl Vertex {
              * Bottom right
              */
             [
-                0, 1, 3, // Upper left triangle
-                1, 2, 3, // Lower right triangle
+                0, 3, 1, // Upper left triangle
+                1, 3, 2, // Lower right triangle
             ];
 
         (vertices, indices.into())
