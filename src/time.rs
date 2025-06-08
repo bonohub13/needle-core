@@ -193,6 +193,35 @@ impl Time {
     }
 }
 
+macro_rules! time_format_impl_from {
+    ($type:ty) => {
+        impl From<TimeFormat> for $type {
+            fn from(element: TimeFormat) -> Self {
+                match element {
+                    TimeFormat::HourMinSec => 0,
+                    TimeFormat::HourMinSecMSec => 1,
+                }
+            }
+        }
+
+        impl From<$type> for TimeFormat {
+            fn from(val: $type) -> Self {
+                match val {
+                    1 => TimeFormat::HourMinSecMSec,
+                    _ => TimeFormat::HourMinSec,
+                }
+            }
+        }
+    };
+}
+
+time_format_impl_from! { i8 }
+time_format_impl_from! { u8 }
+time_format_impl_from! { i16 }
+time_format_impl_from! { u16 }
+time_format_impl_from! { i32 }
+time_format_impl_from! { u32 }
+
 impl Display for TimeFormat {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let format = match self {
@@ -203,3 +232,34 @@ impl Display for TimeFormat {
         write!(f, "{}", format)
     }
 }
+
+macro_rules! op_mode_impl_from {
+    ($type:ty) => {
+        impl From<OpMode> for $type {
+            fn from(element: OpMode) -> Self {
+                match element {
+                    OpMode::Clock => 0,
+                    OpMode::CountUpTimer => 1,
+                    OpMode::CountDownTimer(_) => 2,
+                }
+            }
+        }
+
+        impl From<$type> for OpMode {
+            fn from(val: $type) -> Self {
+                match val {
+                    1 => OpMode::CountUpTimer,
+                    2 => OpMode::CountDownTimer(Duration::new(0, 0)),
+                    _ => OpMode::Clock,
+                }
+            }
+        }
+    };
+}
+
+op_mode_impl_from! { i8 }
+op_mode_impl_from! { u8 }
+op_mode_impl_from! { i16 }
+op_mode_impl_from! { u16 }
+op_mode_impl_from! { i32 }
+op_mode_impl_from! { u32 }
