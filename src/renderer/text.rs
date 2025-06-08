@@ -76,8 +76,8 @@ impl TextRenderer {
     }
 
     #[inline]
-    pub const fn set_config(&mut self, config: &NeedleConfig) {
-        self.config = config.time.config
+    pub const fn set_config(&mut self, config: &Text) {
+        self.config = *config
     }
 
     pub fn text_size(&self) -> [f32; 2] {
