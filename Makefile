@@ -32,6 +32,9 @@ clean:
 build:
 	$(CARGO) build --release
 
+test:
+	$(CARGO) test
+
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
 		-c "Kensuke Saito" \
