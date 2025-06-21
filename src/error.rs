@@ -73,9 +73,19 @@ pub enum NeedleError {
     #[error("Clock | Failed to start countup/countdown timer")]
     TimerStartFailure,
 
+    // Filesystem related errors
+    #[error("Filesystem | Failed to read file")]
+    FailedToReadFile,
+    #[error("Filesystem | Failed to read directory (Directory: {0})")]
+    FailedToReadDir(Box<dyn StdError>),
+    #[error("Filesystem | Failed to search for files/directories (Path: {0})")]
+    FailedToSearchDir(Box<dyn StdError>),
+
     // Other errors
     #[error("Other | Initialization error detected")]
     InitializationError,
+    #[error("Other | Invalid Regex ({0})")]
+    InvalidRegex(Box<dyn StdError>),
     #[error("Other | Unknown error has been detected! Please file an issue to the repository if possible.")]
     Other,
 }
