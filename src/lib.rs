@@ -17,7 +17,7 @@ pub use error::*;
 pub use renderer::*;
 pub use texture::*;
 pub use time::*;
-pub use utils::{FontTypes, Fonts};
+pub use utils::{Font, FontType, FontTypes, Fonts};
 
 use std::fmt::{Display, Formatter, Result};
 

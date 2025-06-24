@@ -3,7 +3,7 @@
 
 mod fonts;
 
-pub use fonts::{FontTypes, Fonts};
+pub use fonts::{Font, FontType, FontTypes, Fonts};
 
 pub(crate) fn crop<T: PartialOrd>(val: T, max: T) -> T {
     if val < max {
