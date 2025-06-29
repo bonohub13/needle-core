@@ -96,7 +96,7 @@ impl Fonts {
         Ok(())
     }
 
-    pub fn read(&mut self, font: &str) -> NeedleErr<Source> {
+    pub fn read(&mut self, font_name: &str) -> NeedleErr<Source> {
         let available_fonts = if let Some(ref available_fonts) = self.available_fonts {
             available_fonts.clone()
         } else {
@@ -105,7 +105,7 @@ impl Fonts {
             /* Fonts have been queried, so something should be in here */
             self.available_fonts.clone().unwrap_or([].into())
         };
-        let font = available_fonts.iter().find(|f| f.font == font.into());
+        let font = available_fonts.iter().find(|f| f.font == font_name.into());
 
         if let Some(font) = font {
             match font.font_type {
@@ -113,9 +113,6 @@ impl Fonts {
                     let property = system_fonts::FontPropertyBuilder::new()
                         .family(&font.font)
                         .build();
-
-                    #[cfg(debug_assertions)]
-                    log::debug!("{}", font.font);
 
                     if let Some((font, _)) = system_fonts::get(&property) {
                         Ok(Source::Binary(Arc::new(font)))
@@ -130,7 +127,9 @@ impl Fonts {
                 }
             }
         } else {
-            Err(NeedleError::FailedToReadFile)
+            let config_path = Self::find_font(font_name)?;
+
+            Ok(Source::File(config_path))
         }
     }
 
