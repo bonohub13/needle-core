@@ -114,9 +114,12 @@ impl TextRenderer {
             self.fonts.query_fonts(Some(FontTypes::Monospace))?;
         }
 
-        let font = self.fonts.read(font)?;
+        let font_src = self.fonts.read(font)?;
+        let mut system = FontSystem::new_with_fonts([font_src]);
 
-        self.system = FontSystem::new_with_fonts([font]);
+        system.db_mut().set_monospace_family(font);
+
+        self.system = system;
 
         Ok(())
     }
