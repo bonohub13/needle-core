@@ -1175,7 +1175,6 @@ dependencies = [
  "glyphon",
  "log",
  "pollster",
- "regex",
  "serde",
  "thiserror 2.0.12",
  "toml",
