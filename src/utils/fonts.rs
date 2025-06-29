@@ -3,7 +3,6 @@ extern crate font_loader as fonts;
 use crate::{NeedleConfig, NeedleErr, NeedleError};
 use fonts::system_fonts;
 use glyphon::fontdb::Source;
-use regex::Regex;
 use std::{fs, path::PathBuf, sync::Arc};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -120,16 +119,10 @@ impl Fonts {
                         Err(NeedleError::FailedToReadFile)
                     }
                 }
-                FontType::Needle => {
-                    let config_path = Self::find_font(&font.font)?;
-
-                    Ok(Source::File(config_path))
-                }
+                FontType::Needle => Ok(Source::File(PathBuf::from(font.font.as_ref()))),
             }
         } else {
-            let config_path = Self::find_font(font_name)?;
-
-            Ok(Source::File(config_path))
+            Err(NeedleError::FailedToReadFile)
         }
     }
 
@@ -182,31 +175,6 @@ impl Fonts {
             Ok(path) => Self::query_files(path),
             Err(err) => Err(NeedleError::FailedToSearchDir(err.into())),
         }
-    }
-
-    fn find_font(font_name: &str) -> NeedleErr<PathBuf> {
-        let fonts_path = NeedleConfig::config_path(true, Some(Self::FONT_SUBDIR))?;
-
-        if fonts_path.exists() {
-            match Self::query_files(fonts_path) {
-                Ok(paths) => {
-                    let re = match Regex::new(&format!(r"/{}\.[a-z]*$", font_name)) {
-                        Ok(regex) => Ok(regex),
-                        Err(err) => Err(NeedleError::InvalidRegex(err.into())),
-                    }?;
-
-                    for path in paths {
-                        if re.find(font_name).is_some() {
-                            return Ok(path);
-                        }
-                    }
-
-                    Err(NeedleError::InvalidPath)
-                }
-                Err(err) => Err(NeedleError::FailedToSearchDir(err.into())),
-            }?;
-        }
-        Err(NeedleError::InvalidPath)
     }
 }
 
@@ -278,7 +246,7 @@ fn test_fonts_0007() {
     let result = fonts.query_fonts(None);
     assert!(result.is_ok());
     let result = if let Some(ref available_fonts) = fonts.available_fonts.clone() {
-        fonts.read(&available_fonts[0])
+        fonts.read(&available_fonts[0].font)
     } else {
         Err(NeedleError::FailedToReadFile)
     };
@@ -293,7 +261,7 @@ fn test_fonts_0008() {
         font: "This doesn't exist".into(),
         font_type: FontType::System,
     };
-    let result = fonts.read(&font);
+    let result = fonts.read(&font.font);
 
     assert!(result.is_err())
 }
