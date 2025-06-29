@@ -1,13 +1,13 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use crate::{NeedleConfig, NeedleErr, NeedleError, State, Text};
-use glyphon::{fontdb::Source, Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
-use std::{fs, path::PathBuf};
+use crate::{Font, FontTypes, Fonts, NeedleErr, NeedleError, State, Text};
+use glyphon::{Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 
 pub struct TextRenderer {
+    fonts: Fonts,
     system: FontSystem,
     swash_cache: SwashCache,
     viewport: Viewport,
@@ -22,22 +22,22 @@ impl TextRenderer {
     pub fn new(
         state: &State,
         config: &Text,
-        font: Option<String>,
+        font: Option<Font>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
         format: wgpu::TextureFormat,
         depth_stencil: Option<wgpu::DepthStencilState>,
     ) -> NeedleErr<Self> {
+        let mut fonts = Fonts::new();
         let mut system = match font {
             Some(font_name) => {
-                let font = Self::find_font(&font_name)?;
-                let mut system = FontSystem::new_with_fonts([Source::File(font)]);
+                let font = {
+                    fonts.query_fonts(Some(FontTypes::Monospace))?;
 
-                system
-                    .db_mut()
-                    .set_sans_serif_family(font_name.split(".").collect::<Vec<_>>()[0]);
+                    fonts.read(&font_name)?
+                };
 
-                system
+                FontSystem::new_with_fonts([font])
             }
             None => FontSystem::new(),
         };
@@ -59,6 +59,7 @@ impl TextRenderer {
         buffer.shape_until_scroll(&mut system, false);
 
         Ok(Self {
+            fonts,
             system,
             swash_cache,
             viewport,
@@ -98,31 +99,25 @@ impl TextRenderer {
         self.buffer.set_text(
             &mut self.system,
             text,
-            &glyphon::Attrs::new().family(glyphon::Family::SansSerif),
+            &glyphon::Attrs::new().family(glyphon::Family::Monospace),
             glyphon::Shaping::Advanced,
         )
     }
 
-    pub fn trim(&mut self) {
-        self.atlas.trim()
+    pub fn set_font(&mut self, font: &Font) -> NeedleErr<()> {
+        if self.fonts.available_fonts().is_empty() {
+            self.fonts.query_fonts(Some(FontTypes::Monospace))?;
+        }
+
+        let font = self.fonts.read(font)?;
+
+        self.system = FontSystem::new_with_fonts([font]);
+
+        Ok(())
     }
 
-    fn find_font(font_name: &str) -> NeedleErr<PathBuf> {
-        let config_path = NeedleConfig::config_path(true, Some("fonts/"))?;
-        let font_path = NeedleConfig::config_path(true, Some(&format!("fonts/{}", font_name)))?;
-
-        if !config_path.exists() {
-            match fs::create_dir(config_path) {
-                Ok(()) => Ok(()),
-                Err(e) => Err(NeedleError::FailedToCreateDirectory(e.into())),
-            }?
-        }
-
-        if font_path.exists() {
-            Ok(font_path)
-        } else {
-            Err(NeedleError::InvalidPath)
-        }
+    pub fn trim(&mut self) {
+        self.atlas.trim()
     }
 }
 
@@ -191,4 +186,8 @@ impl super::Renderer for TextRenderer {
             },
         }
     }
+}
+
+impl Drop for TextRenderer {
+    fn drop(&mut self) {}
 }

@@ -34,13 +34,23 @@ pub enum FontTypes {
 
 impl Fonts {
     const FONT_SUBDIR: &'static str = "fonts/";
+    #[cfg(target_os = "windows")]
+    const DIRECTORY_DELIMITER: &'static str = "\\";
+    #[cfg(target_os = "linux")]
+    const DIRECTORY_DELIMITER: &'static str = "/";
+
     pub fn new() -> Self {
         Self {
             available_fonts: None,
         }
     }
 
-    pub fn query_fonts(&mut self, font_type: Option<FontTypes>) -> NeedleErr<Box<[Font]>> {
+    #[inline]
+    pub fn available_fonts(&self) -> Box<[Font]> {
+        self.available_fonts.clone().unwrap_or([].into())
+    }
+
+    pub fn query_fonts(&mut self, font_type: Option<FontTypes>) -> NeedleErr<()> {
         let mut fonts = vec![];
         let property = if let Some(font_type) = font_type {
             let property = match font_type {
@@ -83,34 +93,65 @@ impl Fonts {
             self.available_fonts = Some(fonts.clone().into());
         }
 
-        Ok(fonts.into())
+        Ok(())
     }
 
     pub fn read(&mut self, font: &Font) -> NeedleErr<Source> {
         let available_fonts = if let Some(ref available_fonts) = self.available_fonts {
             available_fonts.clone()
         } else {
-            self.query_fonts(None)?
+            self.query_fonts(None)?;
+
+            /* Fonts have been queried, so something should be in here */
+            self.available_fonts.clone().unwrap_or([].into())
         };
 
         if available_fonts.contains(font) {
-            if font.font_type == FontType::System {
-                let property = system_fonts::FontPropertyBuilder::new()
-                    .family(&font.font)
-                    .build();
+            match font.font_type {
+                FontType::System => {
+                    let property = system_fonts::FontPropertyBuilder::new()
+                        .family(&font.font)
+                        .build();
 
-                if let Some((font, _)) = system_fonts::get(&property) {
-                    Ok(Source::Binary(Arc::new(font)))
-                } else {
-                    Err(NeedleError::FailedToReadFile)
+                    if let Some((font, _)) = system_fonts::get(&property) {
+                        Ok(Source::Binary(Arc::new(font)))
+                    } else {
+                        Err(NeedleError::FailedToReadFile)
+                    }
                 }
-            } else {
-                let config_path = Self::find_font(&font.font)?;
+                FontType::Needle => {
+                    let config_path = Self::find_font(&font.font)?;
 
-                Ok(Source::File(config_path))
+                    Ok(Source::File(config_path))
+                }
             }
         } else {
             Err(NeedleError::FailedToReadFile)
+        }
+    }
+
+    pub fn font_names(&self) -> Option<Box<[String]>> {
+        if let Some(ref available_fonts) = self.available_fonts {
+            let mut output = vec![];
+
+            available_fonts
+                .iter()
+                .for_each(|font| match font.font_type {
+                    FontType::Needle => {
+                        if let Some(file) = font.font.split(Self::DIRECTORY_DELIMITER).last() {
+                            if let Some(font) = file.split(".").next() {
+                                output.push(font.to_string());
+                            }
+                        }
+                    }
+                    FontType::System => {
+                        output.push(font.font.to_string());
+                    }
+                });
+
+            Some(output.into())
+        } else {
+            None
         }
     }
 
@@ -176,65 +217,64 @@ fn test_fonts_0001() {
 #[test]
 fn test_fonts_0002() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(None);
+    let result = fonts.query_fonts(None);
 
-    assert!(available_fonts.is_ok());
-    if let Ok(available_fonts) = available_fonts {
-        println!("{:?}", available_fonts);
-        assert_eq!(Some(available_fonts), fonts.available_fonts)
+    assert!(result.is_ok());
+    if result.is_ok() {
+        assert!(fonts.available_fonts.is_some())
     }
 }
 
 #[test]
 fn test_fonts_0003() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(Some(FontTypes::Bold));
+    let result = fonts.query_fonts(Some(FontTypes::Bold));
 
-    assert!(available_fonts.is_ok());
-    if let Ok(available_fonts) = available_fonts {
-        assert_eq!(Some(available_fonts), fonts.available_fonts)
+    assert!(result.is_ok());
+    if result.is_ok() {
+        assert!(fonts.available_fonts.is_some())
     }
 }
 
 #[test]
 fn test_fonts_0004() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(Some(FontTypes::Italic));
+    let result = fonts.query_fonts(Some(FontTypes::Italic));
 
-    assert!(available_fonts.is_ok());
-    if let Ok(available_fonts) = available_fonts {
-        assert_eq!(Some(available_fonts), fonts.available_fonts)
+    assert!(result.is_ok());
+    if result.is_ok() {
+        assert!(fonts.available_fonts.is_some())
     }
 }
 
 #[test]
 fn test_fonts_0005() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(Some(FontTypes::Monospace));
+    let result = fonts.query_fonts(Some(FontTypes::Monospace));
 
-    assert!(available_fonts.is_ok());
-    if let Ok(available_fonts) = available_fonts {
-        assert_eq!(Some(available_fonts), fonts.available_fonts)
+    assert!(result.is_ok());
+    if result.is_ok() {
+        assert!(fonts.available_fonts.is_some())
     }
 }
 
 #[test]
 fn test_fonts_0006() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(Some(FontTypes::Oblique));
+    let result = fonts.query_fonts(Some(FontTypes::Oblique));
 
-    assert!(available_fonts.is_ok());
-    if let Ok(available_fonts) = available_fonts {
-        assert_eq!(Some(available_fonts), fonts.available_fonts)
+    assert!(result.is_ok());
+    if result.is_ok() {
+        assert!(fonts.available_fonts.is_some())
     }
 }
 
 #[test]
 fn test_fonts_0007() {
     let mut fonts = Fonts::new();
-    let available_fonts = fonts.query_fonts(None);
-    assert!(available_fonts.is_ok());
-    let result = if let Ok(available_fonts) = available_fonts {
+    let result = fonts.query_fonts(None);
+    assert!(result.is_ok());
+    let result = if let Some(ref available_fonts) = fonts.available_fonts.clone() {
         fonts.read(&available_fonts[0])
     } else {
         Err(NeedleError::FailedToReadFile)
