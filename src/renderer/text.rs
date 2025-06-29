@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use crate::{Font, FontTypes, Fonts, NeedleErr, NeedleError, State, Text};
+use crate::{FontTypes, Fonts, NeedleErr, NeedleError, State, Text};
 use glyphon::{Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
 use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
@@ -22,7 +22,7 @@ impl TextRenderer {
     pub fn new(
         state: &State,
         config: &Text,
-        font: Option<Font>,
+        font: Option<&str>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
         format: wgpu::TextureFormat,
@@ -34,7 +34,7 @@ impl TextRenderer {
                 let font = {
                     fonts.query_fonts(Some(FontTypes::Monospace))?;
 
-                    fonts.read(&font_name)?
+                    fonts.read(font_name)?
                 };
 
                 FontSystem::new_with_fonts([font])
@@ -104,7 +104,7 @@ impl TextRenderer {
         )
     }
 
-    pub fn set_font(&mut self, font: &Font) -> NeedleErr<()> {
+    pub fn set_font(&mut self, font: &str) -> NeedleErr<()> {
         if self.fonts.available_fonts().is_empty() {
             self.fonts.query_fonts(Some(FontTypes::Monospace))?;
         }

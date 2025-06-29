@@ -96,7 +96,7 @@ impl Fonts {
         Ok(())
     }
 
-    pub fn read(&mut self, font: &Font) -> NeedleErr<Source> {
+    pub fn read(&mut self, font: &str) -> NeedleErr<Source> {
         let available_fonts = if let Some(ref available_fonts) = self.available_fonts {
             available_fonts.clone()
         } else {
@@ -105,8 +105,9 @@ impl Fonts {
             /* Fonts have been queried, so something should be in here */
             self.available_fonts.clone().unwrap_or([].into())
         };
+        let font = available_fonts.iter().find(|f| f.font == font.into());
 
-        if available_fonts.contains(font) {
+        if let Some(font) = font {
             match font.font_type {
                 FontType::System => {
                     let property = system_fonts::FontPropertyBuilder::new()
