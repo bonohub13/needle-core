@@ -114,6 +114,9 @@ impl Fonts {
                         .family(&font.font)
                         .build();
 
+                    #[cfg(debug_assertions)]
+                    log::debug!("{}", font.font);
+
                     if let Some((font, _)) = system_fonts::get(&property) {
                         Ok(Source::Binary(Arc::new(font)))
                     } else {
