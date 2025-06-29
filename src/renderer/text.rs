@@ -77,8 +77,8 @@ impl TextRenderer {
     }
 
     #[inline]
-    pub const fn fonts(&self) -> &Fonts {
-        &self.fonts
+    pub const fn fonts(&mut self) -> &mut Fonts {
+        &mut self.fonts
     }
 
     #[inline]
