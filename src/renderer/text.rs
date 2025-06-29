@@ -77,6 +77,11 @@ impl TextRenderer {
     }
 
     #[inline]
+    pub const fn fonts(&self) -> &Fonts {
+        &self.fonts
+    }
+
+    #[inline]
     pub const fn set_config(&mut self, config: &Text) {
         self.config = *config
     }
