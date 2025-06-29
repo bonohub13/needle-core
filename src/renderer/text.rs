@@ -77,7 +77,7 @@ impl TextRenderer {
     }
 
     #[inline]
-    pub const fn fonts(&mut self) -> &mut Fonts {
+    pub const fn fonts_mut(&mut self) -> &mut Fonts {
         &mut self.fonts
     }
 
