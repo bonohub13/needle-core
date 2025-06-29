@@ -22,7 +22,7 @@ impl TextRenderer {
     pub fn new(
         state: &State,
         config: &Text,
-        font: Option<&str>,
+        font: Option<String>,
         size: &PhysicalSize<u32>,
         scale_factor: f64,
         format: wgpu::TextureFormat,
@@ -34,7 +34,7 @@ impl TextRenderer {
                 let font = {
                     fonts.query_fonts(Some(FontTypes::Monospace))?;
 
-                    fonts.read(font_name)?
+                    fonts.read(&font_name)?
                 };
 
                 FontSystem::new_with_fonts([font])
