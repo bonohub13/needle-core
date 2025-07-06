@@ -37,7 +37,11 @@ impl TextRenderer {
                     fonts.read(&font_name)?
                 };
 
-                FontSystem::new_with_fonts([font])
+                let mut system = FontSystem::new_with_fonts([font]);
+
+                system.db_mut().set_monospace_family(font_name);
+
+                system
             }
             None => FontSystem::new(),
         };
