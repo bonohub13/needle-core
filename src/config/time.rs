@@ -37,7 +37,10 @@ impl Display for TimeConfig {
         writeln!(f, "#  fonts = \"\" (default)")?;
         writeln!(f, "#  Example:")?;
         writeln!(f, "#      font = \"DejaVu Serif.ttf\"")?;
-        writeln!(f, "font = \"\"")?;
+        match &self.font {
+            Some(font) => writeln!(f, "font = \"{}\"", font),
+            None => writeln!(f, "font = \"\""),
+        }?;
         for (i, line) in config.iter().enumerate() {
             if line.starts_with("#") {
                 if i == (config.len() - 1) {
