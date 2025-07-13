@@ -1,3 +1,6 @@
+// Copyright 2025 Kensuke Saito
+// SPDX-License-Identifier: GPL-2.0-only
+
 extern crate font_loader as fonts;
 
 use crate::{NeedleConfig, NeedleErr, NeedleError};

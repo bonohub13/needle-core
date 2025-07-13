@@ -81,6 +81,14 @@ pub enum NeedleError {
     #[error("Filesystem | Failed to search for files/directories (Path: {0})")]
     FailedToSearchDir(Box<dyn StdError>),
 
+    // Notification related errors
+    #[cfg(target_os = "windows")]
+    #[error("Notify | Failed to show notification (Error code: {0})")]
+    FailedToShowWinNotification(u32),
+    #[cfg(target_os = "linux")]
+    #[error("Notify | Failed to show notification ({0})")]
+    FailedToShowNotification(dialog::Error),
+
     // Other errors
     #[error("Other | Initialization error detected")]
     InitializationError,
