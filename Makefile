@@ -39,6 +39,10 @@ addlicense:
 		-s=only \
 		$(shell find src -type f -name "*.rs")
 
+build-docker: clippy
+	@TAG=linux CMD="cargo build" make docker-exec
+	@TAG=windows CMD="cargo build --target=x86_64-pc-windows-gnu" make docker-exec
+
 docker-exec:
 	$(DOCKER) run --rm -it \
 		-v $(shell pwd):/app \
