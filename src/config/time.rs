@@ -38,20 +38,20 @@ impl Display for TimeConfig {
         writeln!(f, "#  Example:")?;
         writeln!(f, "#      font = \"DejaVu Serif.ttf\"")?;
         match &self.font {
-            Some(font) => writeln!(f, "font = \"{}\"", font),
+            Some(font) => writeln!(f, "font = \"{font}\""),
             None => writeln!(f, "font = \"\""),
         }?;
         for (i, line) in config.iter().enumerate() {
             if line.starts_with("#") {
                 if i == (config.len() - 1) {
-                    return write!(f, "{}", line);
+                    return write!(f, "{line}");
                 } else {
-                    writeln!(f, "{}", line)?;
+                    writeln!(f, "{line}")?;
                 }
             } else if i == (config.len() - 1) {
-                return write!(f, "config.{}", line);
+                return write!(f, "config.{line}");
             } else {
-                writeln!(f, "config.{}", line)?;
+                writeln!(f, "config.{line}")?;
             }
         }
 

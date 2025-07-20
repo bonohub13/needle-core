@@ -75,6 +75,6 @@ impl Display for Position {
             Self::BottomLeft => "BottomLeft",
         };
 
-        write!(f, "\"{}\"", position)
+        write!(f, "\"{position}\"")
     }
 }

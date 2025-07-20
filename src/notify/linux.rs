@@ -1,20 +1,13 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use super::NotifyType;
+use crate::{DialogBackend, NotifyType};
 use crate::{NeedleErr, NeedleError};
 use dialog::{
     backends::{self, Dialog, KDialog, Stdio, Zenity},
     DialogBox, Message,
 };
 use std::fmt::{self, Display, Formatter};
-
-pub enum DialogBackend<'title> {
-    Dialog(&'title str),
-    KDialog(&'title str),
-    Stdio(&'title str),
-    Zenity(&'title str),
-}
 
 pub struct Notify<Backend>
 where
@@ -102,7 +95,7 @@ impl Display for DialogBackend<'_> {
             &Self::Stdio(title)
             | &Self::Dialog(title)
             | &Self::KDialog(title)
-            | &Self::Zenity(title) => write!(fmt, "{}", title),
+            | &Self::Zenity(title) => write!(fmt, "{title}"),
         }
     }
 }

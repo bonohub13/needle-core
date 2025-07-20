@@ -153,7 +153,7 @@ impl Time {
                 let minute = Self::format_to_digit(2, time.minute());
                 let second = Self::format_to_digit(2, time.second());
 
-                format!("{}:{}:{}", hour, minute, second)
+                format!("{hour}:{minute}:{second}")
             }
             TimeFormat::HourMinSecMSec => {
                 let hour = Self::format_to_digit(2, time.hour());
@@ -161,7 +161,7 @@ impl Time {
                 let second = Self::format_to_digit(2, time.second());
                 let millisecond = Self::format_to_digit(3, time.nanosecond() / 1_000_000);
 
-                format!("{}:{}:{}.{}", hour, minute, second, millisecond)
+                format!("{hour}:{minute}:{second}.{millisecond}")
             }
         }
     }
@@ -176,7 +176,7 @@ impl Time {
                 let minute = Self::format_to_digit(2, minute);
                 let second = Self::format_to_digit(2, second);
 
-                format!("{}:{}:{}", hour, minute, second)
+                format!("{hour}:{minute}:{second}")
             }
             TimeFormat::HourMinSecMSec => {
                 let hour = Self::format_to_digit(2, hour);
@@ -184,7 +184,7 @@ impl Time {
                 let second = Self::format_to_digit(2, second);
                 let millisecond = Self::format_to_digit(3, (delta.as_millis() % 1000) as u32);
 
-                format!("{}:{}:{}.{}", hour, minute, second, millisecond)
+                format!("{hour}:{minute}:{second}.{millisecond}")
             }
         }
     }
@@ -202,7 +202,7 @@ impl Time {
             }
         }
 
-        format!("{}{}", prefix, value)
+        format!("{prefix}{value}")
     }
 }
 
@@ -242,7 +242,7 @@ impl Display for TimeFormat {
             TimeFormat::HourMinSecMSec => "HourMinSecMSec",
         };
 
-        write!(f, "{}", format)
+        write!(f, "{format}")
     }
 }
 
@@ -285,6 +285,6 @@ impl Display for OpMode {
             OpMode::CountUpTimer => "CountUpTimer",
         };
 
-        write!(f, "{}", format)
+        write!(f, "{format}")
     }
 }

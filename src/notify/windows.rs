@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-only
 
-use super::NotifyType;
+use super::{DialogBackend, NotifyType};
 use crate::{NeedleErr, NeedleError};
 use win_msgbox::{MessageBox, Okay};
 
@@ -10,10 +10,12 @@ pub struct Notify {
 }
 
 impl Notify {
-    pub fn new(title: &str) -> Self {
-        Self {
-            title: title.into(),
-        }
+    pub fn new(title: DialogBackend) -> Self {
+        let title: Box<str> = match title {
+            DialogBackend::WinApi(title) => title.into(),
+        };
+
+        Self { title }
     }
 
     fn show<Opt>(msgbox: MessageBox<Opt>) -> NeedleErr<()>

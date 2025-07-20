@@ -153,7 +153,7 @@ impl<'a> NeedleConfig {
         }?;
         let mut buf_writer = BufWriter::new(file);
 
-        match writeln!(buf_writer, "{}", self) {
+        match writeln!(buf_writer, "{self}") {
             Ok(_) => Ok(()),
             Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
         }
@@ -172,7 +172,7 @@ impl<'a> NeedleConfig {
         let config = Self::default();
 
         if file.as_os_str() == OsStr::new("stdout") {
-            println!("{}", config);
+            println!("{config}");
 
             Ok(())
         } else {
@@ -187,7 +187,7 @@ impl<'a> NeedleConfig {
             }?;
             let mut buf_writer = BufWriter::new(file);
 
-            match writeln!(buf_writer, "{}", config) {
+            match writeln!(buf_writer, "{config}") {
                 Ok(_) => Ok(()),
                 Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
             }

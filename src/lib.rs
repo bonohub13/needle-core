@@ -32,7 +32,7 @@ pub fn version_info() -> String {
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
 
-    format!("{} {}", name, version)
+    format!("{name} {version}")
 }
 
 #[allow(dead_code)]
@@ -61,102 +61,102 @@ impl<'a> Display for NeedleLabel<'a> {
                 if label.is_empty() {
                     "Imgui Window".to_string()
                 } else {
-                    format!("{} Imgui Window", label)
+                    format!("{label} Imgui Window")
                 }
             }
             Self::Device(label) => {
                 if label.is_empty() {
                     "Device".to_string()
                 } else {
-                    format!("{} Device", label)
+                    format!("{label} Device")
                 }
             }
             Self::PipelineLayout(label) => {
                 if label.is_empty() {
                     "Pipeline Layout".to_string()
                 } else {
-                    format!("{} Pipeline Layout", label)
+                    format!("{label} Pipeline Layout")
                 }
             }
             Self::Pipeline(label) => {
                 if label.is_empty() {
                     "Render Pipeline".to_string()
                 } else {
-                    format!("{} Pipeline", label)
+                    format!("{label} Pipeline")
                 }
             }
             Self::CommandEncoder(label) => {
                 if label.is_empty() {
                     "Command Encoder".to_string()
                 } else {
-                    format!("{} Command Encoder", label)
+                    format!("{label} Command Encoder")
                 }
             }
             Self::RenderPass(label) => {
                 if label.is_empty() {
                     "Render Pass".to_string()
                 } else {
-                    format!("{} Render Pass", label)
+                    format!("{label} Render Pass")
                 }
             }
             Self::Renderer(label) => {
                 if label.is_empty() {
                     "Renderer".to_string()
                 } else {
-                    format!("{} Renderer", label)
+                    format!("{label} Renderer")
                 }
             }
             Self::Shader(label) => {
                 if label.is_empty() {
                     "Shader".to_string()
                 } else {
-                    format!("{} Shader", label)
+                    format!("{label} Shader")
                 }
             }
             Self::Texture(label) => {
                 if label.is_empty() {
                     "Texture".to_string()
                 } else {
-                    format!("{} Texture", label)
+                    format!("{label} Texture")
                 }
             }
             Self::VertexBuffer(label) => {
                 if label.is_empty() {
                     "Vertex Buffer".to_string()
                 } else {
-                    format!("{} Vertex Buffer", label)
+                    format!("{label} Vertex Buffer")
                 }
             }
             Self::IndexBuffer(label) => {
                 if label.is_empty() {
                     "Index Buffer".to_string()
                 } else {
-                    format!("{} Index Buffer", label)
+                    format!("{label} Index Buffer")
                 }
             }
             Self::UniformBuffer(label) => {
                 if label.is_empty() {
                     "Uniform Buffer".to_string()
                 } else {
-                    format!("{} Uniform Buffer", label)
+                    format!("{label} Uniform Buffer")
                 }
             }
             Self::BindGroupLayout(label) => {
                 if label.is_empty() {
                     "Bind Group Layout".to_string()
                 } else {
-                    format!("{} Bind Group Layout", label)
+                    format!("{label} Bind Group Layout")
                 }
             }
             Self::BindGroup(label) => {
                 if label.is_empty() {
                     "Bind Group".to_string()
                 } else {
-                    format!("{} Bind Group", label)
+                    format!("{label} Bind Group")
                 }
             }
         };
 
-        write!(f, "{}", label)
+        write!(f, "{label}")
     }
 }

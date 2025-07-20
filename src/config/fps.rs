@@ -35,14 +35,14 @@ impl Display for FpsConfig {
         for (i, line) in config.iter().enumerate() {
             if line.starts_with("#") {
                 if i == (config.len() - 1) {
-                    return write!(f, "{}", line);
+                    return write!(f, "{line}");
                 } else {
-                    writeln!(f, "{}", line)?;
+                    writeln!(f, "{line}")?;
                 }
             } else if i == (config.len() - 1) {
-                return write!(f, "config.{}", line);
+                return write!(f, "config.{line}");
             } else {
-                writeln!(f, "config.{}", line)?;
+                writeln!(f, "config.{line}")?;
             }
         }
 
