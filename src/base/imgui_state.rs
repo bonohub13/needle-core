@@ -83,22 +83,9 @@ impl ImguiState {
         self.last_frame = new_frame;
     }
 
-    pub fn setup<SetupFn, Err>(
-        &mut self,
-        window: &Window,
-        config: &mut NeedleConfig,
-        clock_info: &mut Time,
-        text_renderer: &mut TextRenderer,
-        setup: SetupFn,
-    ) -> NeedleErr<()>
+    pub fn setup<SetupFn, Err>(&mut self, window: &Window, setup: SetupFn) -> NeedleErr<()>
     where
-        SetupFn: FnOnce(
-            &mut imgui::Ui,
-            &mut ImguiMode,
-            &mut NeedleConfig,
-            &mut Time,
-            &mut TextRenderer,
-        ) -> Result<(), Err>,
+        SetupFn: FnOnce(&mut imgui::Ui, &mut ImguiMode) -> Result<(), Err>,
         Err: StdError + Into<Box<dyn StdError>>,
     {
         match self.platform.prepare_frame(self.context.io_mut(), window) {
@@ -108,13 +95,7 @@ impl ImguiState {
         let ui = self.context.new_frame();
 
         if self.show_imgui {
-            match setup(
-                ui,
-                &mut self.settings_mode,
-                config,
-                clock_info,
-                text_renderer,
-            ) {
+            match setup(ui, &mut self.settings_mode) {
                 Ok(_) => Ok(()),
                 Err(err) => Err(NeedleError::FailedToSetupUi(err.into())),
             }?;
