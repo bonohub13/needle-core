@@ -35,7 +35,7 @@ build:
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
 		-c "Kensuke Saito" \
-		-l GPL-2.0-only \
+		-l GPL-2.0-or-later \
 		-s=only \
 		$(shell find src -type f -name "*.rs")
 
