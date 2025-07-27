@@ -1,10 +1,14 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+mod imgui_state;
+
 use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
 use std::sync::Arc;
 use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
+
+pub use imgui_state::{ImguiMode, ImguiState};
 
 pub struct State<'a> {
     size: PhysicalSize<u32>,

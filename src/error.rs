@@ -89,6 +89,13 @@ pub enum NeedleError {
     #[error("Notify | Failed to show notification ({0})")]
     FailedToShowNotification(dialog::Error),
 
+    #[error("Imgui | Failed to prepare frame for UI ({0})")]
+    FailedToPrepareUiFrame(Box<dyn StdError>),
+    #[error("Imgui | Failed to setup UI ({0})")]
+    FailedToSetupUi(Box<dyn StdError>),
+    #[error("Imgui | Failed to render UI ({0})")]
+    FailedToRenderUi(Box<dyn StdError>),
+
     // Other errors
     #[error("Other | Initialization error detected")]
     InitializationError,
