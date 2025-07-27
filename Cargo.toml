@@ -17,7 +17,7 @@ serde = {version = "1.0.215", features = ["derive"]}
 thiserror = "2.0.12"
 toml = "0.8.19"
 wgpu = "25.0.0"
-winit = { version = "0.30.11" }
+winit = { version = "0.30" }
 
 [target.'cfg(windows)'.dependencies]
 win-msgbox = "0.2.1"
