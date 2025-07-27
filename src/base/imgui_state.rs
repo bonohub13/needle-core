@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-use crate::{NeedleConfig, NeedleErr, NeedleError, NeedleLabel, State, TextRenderer, Time};
+use crate::{NeedleConfig, NeedleErr, NeedleError, NeedleLabel, State};
 use imgui::{Context, FontConfig, FontSource, MouseCursor};
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 use std::{cell::RefCell, error::Error as StdError, rc::Rc, sync::Arc, time::Instant};
