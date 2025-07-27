@@ -32,10 +32,10 @@ macro_rules! imgui_mode_from {
         impl From<$type> for ImguiMode {
             fn from(val: $type) -> Self {
                 match val {
-                    0 => Self::Background,
-                    1 => Self::ClockTimer,
-                    2 => Self::Fps,
-                    _ => Self::Invalid,
+                    0 => ImguiMode::Background,
+                    1 => ImguiMode::ClockTimer,
+                    2 => ImguiMode::Fps,
+                    _ => ImguiMode::Invalid,
                 }
             }
         }
