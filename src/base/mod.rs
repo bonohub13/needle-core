@@ -61,18 +61,19 @@ impl<'a> State<'a> {
             .find(|f| f.is_srgb())
             .copied()
             .unwrap_or(surface_caps.formats[0]);
+        let alpha_mode = surface_caps
+            .alpha_modes
+            .iter()
+            .find(|alpha| **alpha == CompositeAlphaMode::PreMultiplied)
+            .copied()
+            .unwrap_or(surface_caps.alpha_modes[0]);
         let surface_config = SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.width,
             height: size.height,
             present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps
-                .alpha_modes
-                .iter()
-                .find(|alpha| **alpha == CompositeAlphaMode::Opaque)
-                .copied()
-                .unwrap_or(surface_caps.alpha_modes[0]),
+            alpha_mode,
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
