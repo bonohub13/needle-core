@@ -5,7 +5,7 @@ mod imgui_state;
 
 use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
 use std::sync::Arc;
-use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
+use wgpu::{util::DeviceExt, CompositeAlphaMode, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
 pub use imgui_state::{ImguiMode, ImguiState};
@@ -67,7 +67,12 @@ impl<'a> State<'a> {
             width: size.width,
             height: size.height,
             present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps.alpha_modes[0],
+            alpha_mode: surface_caps
+                .alpha_modes
+                .iter()
+                .find(|alpha| **alpha == CompositeAlphaMode::Opaque)
+                .copied()
+                .unwrap_or(surface_caps.alpha_modes[0]),
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
