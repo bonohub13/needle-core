@@ -41,11 +41,10 @@ addlicense:
 
 clippy-docker:
 	@TAG=linux CMD="cargo clippy" make docker-exec
-	@TAG=windows CMD="cargo clippy --target=x86_64-pc-windows-gnu" make docker-exec
 
 build-docker: clippy-docker
 	@TAG=linux CMD="cargo build" make docker-exec
-	@TAG=windows CMD="cargo build --target=x86_64-pc-windows-gnu" make docker-exec
+	@TAG=windows CMD="cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
 
 docker-exec:
 	$(DOCKER) run --rm -it \
