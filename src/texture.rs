@@ -55,6 +55,7 @@ impl Texture {
         }
     }
 
+    #[inline]
     pub fn default_depth_stencil() -> wgpu::DepthStencilState {
         wgpu::DepthStencilState {
             format: Texture::DEPTH_FORMAT,

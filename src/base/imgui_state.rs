@@ -156,6 +156,7 @@ impl ImguiState {
         )
     }
 
+    #[inline]
     pub fn toggle_imgui(&mut self) {
         self.show_imgui = !self.show_imgui;
     }

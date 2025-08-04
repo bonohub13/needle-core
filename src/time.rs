@@ -34,6 +34,7 @@ impl Time {
     const MINUTE_SECS: u64 = 60;
     const HOUR_SECS: u64 = Self::MINUTE_SECS * 60;
 
+    #[inline]
     pub fn new(format: TimeFormat) -> Self {
         Self {
             format,
@@ -63,7 +64,8 @@ impl Time {
         }
     }
 
-    pub fn set_format(&mut self, format: TimeFormat) {
+    #[inline]
+    pub const fn set_format(&mut self, format: TimeFormat) {
         self.format = format;
     }
 
