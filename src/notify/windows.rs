@@ -11,11 +11,9 @@ pub struct Notify {
 
 impl Notify {
     pub fn new(title: DialogBackend) -> Self {
-        let title: Box<str> = match title {
-            DialogBackend::WinApi(title) => title.into(),
-        };
-
-        Self { title }
+        Self {
+            title: title.into(),
+        }
     }
 
     fn show<Opt>(msgbox: MessageBox<Opt>) -> NeedleErr<()>

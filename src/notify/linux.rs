@@ -20,35 +20,13 @@ where
 impl<Backend> Notify<Backend>
 where
     Backend: DialogBox,
-    Box<Backend>: From<Dialog>,
-    Box<Backend>: From<KDialog>,
-    Box<Backend>: From<Stdio>,
-    Box<Backend>: From<Zenity>,
+    Box<Backend>: From<Box<Dialog>>,
+    Box<Backend>: From<Box<KDialog>>,
+    Box<Backend>: From<Box<Stdio>>,
+    Box<Backend>: From<Box<Zenity>>,
 {
-    const WIDTH: u32 = 100;
-    const HEIGHT: u32 = 60;
-
     pub fn new(title: DialogBackend) -> Self {
-        let (backend, title): (Box<Backend>, Box<str>) = match title {
-            DialogBackend::Dialog(title) => {
-                let mut backend = Dialog::new();
-
-                backend.set_width(Self::WIDTH);
-                backend.set_height(Self::HEIGHT);
-
-                (backend.into(), title.into())
-            }
-            DialogBackend::KDialog(title) => (KDialog::new().into(), title.into()),
-            DialogBackend::Stdio(title) => (Stdio::new().into(), title.into()),
-            DialogBackend::Zenity(title) => {
-                let mut backend = Zenity::new();
-
-                backend.set_width(Self::WIDTH);
-                backend.set_height(Self::HEIGHT);
-
-                (backend.into(), title.into())
-            }
-        };
+        let (backend, title) = title.into();
 
         Self { backend, title }
     }
@@ -93,9 +71,9 @@ impl Display for DialogBackend<'_> {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> fmt::Result {
         match self {
             &Self::Stdio(title)
-            | &Self::Dialog(title)
+            | &Self::Dialog(title, _)
             | &Self::KDialog(title)
-            | &Self::Zenity(title) => write!(fmt, "{title}"),
+            | &Self::Zenity(title, _) => write!(fmt, "{title}"),
         }
     }
 }
