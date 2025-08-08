@@ -72,7 +72,7 @@ where
 }
 
 #[cfg(target_os = "windows")]
-impl<'title, Backend> From<DialogBackend<'title>> for Box<str> {
+impl<'title> From<DialogBackend<'title>> for Box<str> {
     fn from(backend: DialogBackend<'title>) -> Self {
         match backend {
             DialogBackend::WinApi(title) => title.into(),
