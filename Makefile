@@ -41,6 +41,7 @@ addlicense:
 
 clippy-docker:
 	@TAG=linux CMD="cargo clippy" make docker-exec
+	@TAG=windows CMD="cargo clippy" make docker-exec
 
 build-docker: clippy-docker
 	@TAG=linux CMD="cargo build" make docker-exec
