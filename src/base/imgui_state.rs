@@ -4,7 +4,14 @@
 use crate::{NeedleConfig, NeedleErr, NeedleError, NeedleLabel, State};
 use imgui::{Context, FontConfig, FontSource, MouseCursor};
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
-use std::{cell::RefCell, error::Error as StdError, rc::Rc, sync::Arc, time::Instant};
+use std::{
+    cell::RefCell,
+    error::Error as StdError,
+    fmt::{self, Display, Formatter},
+    rc::Rc,
+    sync::Arc,
+    time::Instant,
+};
 use winit::window::{Window, WindowId};
 
 #[repr(u8)]
@@ -48,6 +55,17 @@ imgui_mode_from! { i16 }
 imgui_mode_from! { u16 }
 imgui_mode_from! { i32 }
 imgui_mode_from! { u32 }
+
+impl Display for ImguiMode {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Self::Background => write!(f, "Background"),
+            Self::ClockTimer => write!(f, "Clock/Timer"),
+            Self::Fps => write!(f, "FPS"),
+            Self::Invalid => write!(f, "Invalid"),
+        }
+    }
+}
 
 pub struct ImguiState {
     context: Context,
