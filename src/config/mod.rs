@@ -1,5 +1,5 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 mod fps;
 mod position;
@@ -88,10 +88,16 @@ impl<'a> NeedleConfig {
             Err(err) => Err(NeedleError::FailedToReadConfig(err.into())),
         }?;
 
-        let config: Self = match toml::from_str(&read_buffer) {
+        let mut config: Self = match toml::from_str(&read_buffer) {
             Ok(toml) => Ok(toml),
             Err(err) => Err(NeedleError::FailedToParseConfig(err.into())),
         }?;
+
+        if let Some(ref font) = config.time.font {
+            if font.is_empty() {
+                config.time.font = None;
+            }
+        }
 
         if config.fps.enable && !config.fps.is_valid_position() {
             Err(NeedleError::InvalidFpsTextPosition(

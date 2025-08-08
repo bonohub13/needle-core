@@ -1,5 +1,5 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 use crate::utils::crop;
 use std::mem::size_of;
@@ -15,7 +15,7 @@ impl Vertex {
     const VERTEX_ATTR: [wgpu::VertexAttribute; 2] =
         wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x4];
     #[inline]
-    pub fn new(position: [f32; 3], color: [f32; 4]) -> Self {
+    pub const fn new(position: [f32; 3], color: [f32; 4]) -> Self {
         Self { position, color }
     }
 

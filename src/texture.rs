@@ -1,5 +1,5 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 use crate::NeedleLabel;
 
@@ -55,6 +55,7 @@ impl Texture {
         }
     }
 
+    #[inline]
     pub fn default_depth_stencil() -> wgpu::DepthStencilState {
         wgpu::DepthStencilState {
             format: Texture::DEPTH_FORMAT,

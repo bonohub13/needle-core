@@ -1,5 +1,5 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 use super::Position;
 use serde::Deserialize;
@@ -13,7 +13,7 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn position(
+    pub const fn position(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -52,7 +52,7 @@ impl Text {
         }
     }
 
-    fn center(
+    const fn center(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -63,7 +63,7 @@ impl Text {
         )
     }
 
-    fn top(
+    const fn top(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -75,7 +75,7 @@ impl Text {
         )
     }
 
-    fn bottom(
+    const fn bottom(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -87,7 +87,7 @@ impl Text {
         )
     }
 
-    fn left(
+    const fn left(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -96,7 +96,7 @@ impl Text {
         (margin, (screen_size.height as f32 - text_size[1]) / 2.0)
     }
 
-    fn right(
+    const fn right(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],

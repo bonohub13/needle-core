@@ -35,13 +35,16 @@ build:
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
 		-c "Kensuke Saito" \
-		-l GPL-2.0-only \
+		-l GPL-2.0-or-later \
 		-s=only \
 		$(shell find src -type f -name "*.rs")
 
-build-docker: clippy
+clippy-docker:
+	@TAG=linux CMD="cargo clippy" make docker-exec
+
+build-docker: clippy-docker
 	@TAG=linux CMD="cargo build" make docker-exec
-	@TAG=windows CMD="cargo build --target=x86_64-pc-windows-gnu" make docker-exec
+	@TAG=windows CMD="cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
 
 docker-exec:
 	$(DOCKER) run --rm -it \

@@ -1,10 +1,14 @@
 // Copyright 2025 Kensuke Saito
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+mod imgui_state;
 
 use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
 use std::sync::Arc;
-use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
+use wgpu::{util::DeviceExt, CompositeAlphaMode, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
+
+pub use imgui_state::{ImguiMode, ImguiState};
 
 pub struct State<'a> {
     size: PhysicalSize<u32>,
@@ -57,13 +61,19 @@ impl<'a> State<'a> {
             .find(|f| f.is_srgb())
             .copied()
             .unwrap_or(surface_caps.formats[0]);
+        let alpha_mode = surface_caps
+            .alpha_modes
+            .iter()
+            .find(|alpha| **alpha == CompositeAlphaMode::PreMultiplied)
+            .copied()
+            .unwrap_or(surface_caps.alpha_modes[0]);
         let surface_config = SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.width,
             height: size.height,
             present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps.alpha_modes[0],
+            alpha_mode,
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
