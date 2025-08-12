@@ -10,6 +10,7 @@ pub struct Notify {
 }
 
 impl Notify {
+    /// Creates new instance of Notify.
     pub fn new(title: DialogBackend) -> Self {
         Self {
             title: title.into(),

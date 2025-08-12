@@ -25,6 +25,7 @@ where
     Box<Backend>: From<Box<Stdio>>,
     Box<Backend>: From<Box<Zenity>>,
 {
+    /// Creates new instance of notify.
     pub fn new(title: DialogBackend) -> Self {
         let (backend, title) = title.into();
 
