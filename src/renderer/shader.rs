@@ -23,17 +23,28 @@ pub struct ShaderRenderer {
 
 #[derive(Debug)]
 pub struct ShaderRendererDescriptor<'desc> {
+    /// Path to vertex shader
     pub vert_shader_path: PathBuf,
+    /// Path to fragment shader
     pub frag_shader_path: PathBuf,
+    /// Vertex buffers
     pub vertex_buffers: &'desc [wgpu::Buffer],
+    /// Buffer layouts of Vertex buffer
     pub vertex_buffer_layouts: &'desc [wgpu::VertexBufferLayout<'desc>],
+    /// Indices index buffer
     pub indices: Option<(i32, Box<[u16]>)>,
+    /// Index buffer
     pub index_buffers: Option<wgpu::Buffer>,
+    /// Depth Stencil
     pub depth_stencil: Option<wgpu::DepthStencilState>,
+    /// Label used for vertex buffer and index buffer
     pub label: Option<&'desc str>,
 }
 
 impl ShaderRenderer {
+    /// Creates new instance of ShaderRenderer
+    /// Vertex buffer must be passed, however index buffer is optional.
+    /// For further specifications, refer to ShaderRendererDescriptor.
     pub fn new(state: &State, desc: &ShaderRendererDescriptor) -> NeedleErr<Self> {
         // Each buffer must have their bind group layout and bind group
         if desc.vertex_buffers.len() != desc.vertex_buffer_layouts.len() {
@@ -126,16 +137,20 @@ impl ShaderRenderer {
         })
     }
 
+    /// Returns reference to render pipeline.
     #[inline]
     pub const fn pipeline(&self) -> &RenderPipeline {
         &self.pipeline
     }
 
+    /// Returns reference to vertex buffer.
     #[inline]
     pub fn vertex_buffer(&self, index: usize) -> &Buffer {
         &self.vertex_buffers[index]
     }
 
+    /// Overwrites all vertex buffers.
+    /// Pre-existing vertex buffers are all destroyed.
     pub fn set_vertex_buffer(&mut self, buffer: &[Buffer]) -> NeedleErr<()> {
         if buffer.len() != self.vertex_buffers.len() {
             Err(NeedleError::InvalidBufferRegistration)
