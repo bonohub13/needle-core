@@ -19,6 +19,7 @@ pub struct State<'a> {
 }
 
 impl<'a> State<'a> {
+    /// Create new needle state from winit Window.
     pub async fn new(window: Arc<Window>) -> NeedleErr<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -87,26 +88,32 @@ impl<'a> State<'a> {
         })
     }
 
+    /// Size of window
     #[inline]
     pub const fn size(&self) -> PhysicalSize<u32> {
         self.size
     }
 
+    /// Returns reference to logical wgpu::Device
     #[inline]
     pub const fn device(&self) -> &Device {
         &self.device
     }
 
+    /// Returns reference to wgpu::Queue
     #[inline]
     pub const fn queue(&self) -> &Queue {
         &self.queue
     }
 
+    /// Returns reference to wgpu::SurfaceConfiguration
     #[inline]
     pub const fn surface_config(&self) -> &SurfaceConfiguration {
         &self.config
     }
 
+    /// Resize the window/surface size.
+    /// Width and height are passed via `winit::dpi::PhysicalSize`
     pub fn resize(&mut self, size: &PhysicalSize<u32>) {
         if (size.width > 0) && (size.height > 0) {
             self.size = *size;
@@ -116,6 +123,8 @@ impl<'a> State<'a> {
         }
     }
 
+    /// Render function to call any renderers' render operation using wgpu::CommandEncoder.
+    /// After all the renderers have finished rendering, the queue is automatically submitted.
     pub fn render<F>(&mut self, render_func: F) -> NeedleErr<()>
     where
         F: FnOnce(&mut wgpu::CommandEncoder) -> NeedleErr<()>,
@@ -133,6 +142,15 @@ impl<'a> State<'a> {
         Ok(())
     }
 
+    /// Get the current texture from Surface.
+    /// Upon failure to retrieve surface texture, return the following errors.
+    /// - Timeout
+    /// - Outdated
+    /// - Lost
+    /// - OutOfMemory
+    /// - Other
+    ///
+    /// These errors are translated from `wgpu::SurfaceError` into `NeedleError`
     pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
         match self.surface.get_current_texture() {
             Ok(texture) => Ok(texture),
@@ -150,6 +168,9 @@ impl<'a> State<'a> {
         }
     }
 
+    /// Create vertex buffer from vertices.
+    /// This requires label for the vertex buffer.
+    /// (Can be empty if only a single vertex buffer is used)
     pub fn create_vertex_buffer(&self, label: &str, vertices: &[Vertex]) -> wgpu::Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -159,6 +180,9 @@ impl<'a> State<'a> {
             })
     }
 
+    /// Create index buffer from indices
+    /// This requires label for the index buffer.
+    /// (Can be empty if only a single index buffer is used)
     pub fn create_index_buffer(&self, label: &str, indices: &[u16]) -> wgpu::Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

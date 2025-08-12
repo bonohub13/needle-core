@@ -28,6 +28,9 @@ pub use notify::{DialogBackend, Notify};
 
 use std::fmt::{Display, Formatter, Result};
 
+/// Returns version information.
+/// - Package name
+/// - Version
 pub fn version_info() -> String {
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
@@ -35,7 +38,7 @@ pub fn version_info() -> String {
     format!("{name} {version}")
 }
 
-#[allow(dead_code)]
+/// Labels for wgpu/imgui objects in needle
 #[derive(Debug)]
 pub enum NeedleLabel<'a> {
     ImguiWindow(&'a str),

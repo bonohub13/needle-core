@@ -78,6 +78,10 @@ pub struct ImguiState {
 }
 
 impl ImguiState {
+    /// Create new instance of ImguiState from the objects below.
+    /// 1. window : `Arc<winit::window::Window>`
+    /// 2. config : `Rc<RefCell<NeedleConfig>>`
+    /// 3. state : `&State`
     pub fn new(window: Arc<Window>, config: Rc<RefCell<NeedleConfig>>, state: &State) -> Self {
         let mut context = Self::create_context(window.clone(), config.clone());
         let platform = Self::create_platform(window.clone(), &mut context);
@@ -94,6 +98,7 @@ impl ImguiState {
         }
     }
 
+    /// Update per frame information
     pub fn update(&mut self, new_frame: Instant) {
         self.context
             .io_mut()
@@ -101,6 +106,7 @@ impl ImguiState {
         self.last_frame = new_frame;
     }
 
+    // Setup Imgui UI and prepare for rendering
     pub fn setup<SetupFn, Err>(&mut self, window: &Window, setup: SetupFn) -> NeedleErr<()>
     where
         SetupFn: FnOnce(&mut imgui::Ui, &mut ImguiMode) -> Result<(), Err>,
@@ -127,6 +133,8 @@ impl ImguiState {
         Ok(())
     }
 
+    /// Render Imgui UI
+    /// Note. Imgui UI needs to be prepared per frame.
     pub fn render(&mut self, state: &State, view: &wgpu::TextureView) -> NeedleErr<()> {
         let mut encoder = state.device().create_command_encoder(&Default::default());
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -161,6 +169,7 @@ impl ImguiState {
         Ok(())
     }
 
+    /// Event handler for Imgui UI
     pub fn handle_event(
         &mut self,
         window: &Window,
@@ -174,6 +183,7 @@ impl ImguiState {
         )
     }
 
+    /// Enable/Disable Imgui UI
     #[inline]
     pub fn toggle_imgui(&mut self) {
         self.show_imgui = !self.show_imgui;

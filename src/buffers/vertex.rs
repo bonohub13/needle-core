@@ -14,11 +14,17 @@ pub struct Vertex {
 impl Vertex {
     const VERTEX_ATTR: [wgpu::VertexAttribute; 2] =
         wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x4];
+    /// Create a new instance of Vertex
     #[inline]
     pub const fn new(position: [f32; 3], color: [f32; 4]) -> Self {
         Self { position, color }
     }
 
+    /// Create a Vertex of rectangle with the specifications below.
+    /// - size: width, height
+    /// - offset: x, y offset
+    /// - depth: z axis offset
+    /// - color: RGBA for all vertex
     pub fn rectangle(size: [f32; 2], offset: [f32; 2], depth: f32, color: &[f32; 4]) -> Vec<Self> {
         let (min_x, min_y) = (crop(offset[0], 1.0) - 1.0, crop(offset[1], 1.0) - 1.0);
 
@@ -32,6 +38,8 @@ impl Vertex {
         ]
     }
 
+    /// Create indexed rectangle.
+    /// For specification of rectangle, refer to `Vertex::rectangle()`.
     pub fn indexed_rectangle(
         size: [f32; 2],
         offset: [f32; 2],
@@ -63,7 +71,8 @@ impl Vertex {
         (vertices, indices.into())
     }
 
-    pub const fn buffer_layout() -> wgpu::VertexBufferLayout<'static> {
+    /// Create buffer layout for Vertex
+    pub const fn buffer_layout<'layout>() -> wgpu::VertexBufferLayout<'layout> {
         wgpu::VertexBufferLayout {
             array_stride: size_of::<Self>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,

@@ -13,6 +13,8 @@ pub struct FpsConfig {
 }
 
 impl FpsConfig {
+    /// Checks if position of FPS counter is valid.
+    /// Only corners are allowed.
     pub fn is_valid_position(&self) -> bool {
         matches!(
             self.config.position,
