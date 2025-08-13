@@ -55,36 +55,49 @@ impl<'a> State<'a> {
         }?;
 
         // Config
-        let surface_caps = surface.get_capabilities(adapter);
-        let surface_format = surface_caps
-            .formats
-            .iter()
-            .find(|f| f.is_srgb())
-            .copied()
-            .unwrap_or(surface_caps.formats[0]);
-        let alpha_mode = surface_caps
-            .alpha_modes
-            .iter()
-            .find(|alpha| **alpha == CompositeAlphaMode::PreMultiplied)
-            .copied()
-            .unwrap_or(surface_caps.alpha_modes[0]);
-        let surface_config = SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width: size.width,
-            height: size.height,
-            present_mode: surface_caps.present_modes[0],
-            alpha_mode,
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
+        let config = {
+            let capabilites = surface.get_capabilities(adapter);
+            let format = capabilites
+                .formats
+                .iter()
+                .find(|f| f.is_srgb())
+                .copied()
+                .unwrap_or(capabilites.formats[0]);
+            let present_mode = capabilites
+                .present_modes
+                .iter()
+                .find(|present_mode| **present_mode == wgpu::PresentMode::Mailbox)
+                .copied()
+                .unwrap_or(capabilites.present_modes[0]);
+            let alpha_mode = capabilites
+                .alpha_modes
+                .iter()
+                .find(|alpha| **alpha == CompositeAlphaMode::PreMultiplied)
+                .copied()
+                .unwrap_or(capabilites.alpha_modes[0]);
+            SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format,
+                width: size.width,
+                height: size.height,
+                present_mode,
+                alpha_mode,
+                view_formats: vec![],
+                desired_maximum_frame_latency: 2,
+            }
         };
+
+        surface.configure(&device, &config);
+
+        #[cfg(debug_assertions)]
+        dbg!(&config);
 
         Ok(Self {
             size,
             surface,
             device,
             queue,
-            config: surface_config,
+            config,
         })
     }
 
