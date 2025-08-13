@@ -13,7 +13,9 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn position(
+    /// Returns coordinates (x, y) of text.
+    #[inline]
+    pub const fn position(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -52,7 +54,8 @@ impl Text {
         }
     }
 
-    fn center(
+    #[inline]
+    const fn center(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -63,7 +66,8 @@ impl Text {
         )
     }
 
-    fn top(
+    #[inline]
+    const fn top(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -75,7 +79,8 @@ impl Text {
         )
     }
 
-    fn bottom(
+    #[inline]
+    const fn bottom(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -87,7 +92,8 @@ impl Text {
         )
     }
 
-    fn left(
+    #[inline]
+    const fn left(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],
@@ -96,7 +102,8 @@ impl Text {
         (margin, (screen_size.height as f32 - text_size[1]) / 2.0)
     }
 
-    fn right(
+    #[inline]
+    const fn right(
         &self,
         screen_size: &winit::dpi::PhysicalSize<u32>,
         text_size: &[f32; 2],

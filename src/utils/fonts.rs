@@ -41,17 +41,26 @@ impl Fonts {
     #[cfg(target_os = "linux")]
     const DIRECTORY_DELIMITER: &'static str = "/";
 
-    pub fn new() -> Self {
+    /// Creates new instance of Fonts.
+    /// - Note:
+    /// It is initialized with no available fonts.
+    /// Available fonts within a system must be queried later on.
+    #[inline]
+    pub const fn new() -> Self {
         Self {
             available_fonts: None,
         }
     }
 
+    /// Returns a reference of available fonts within a system.
+    /// If there were no available fonts, or fonts have not been queried, it returns an empty
+    /// slice.
     #[inline]
     pub fn available_fonts(&self) -> Box<[Font]> {
         self.available_fonts.clone().unwrap_or([].into())
     }
 
+    /// Queries all available fonts within a system.
     pub fn query_fonts(&mut self, font_type: Option<FontTypes>) -> NeedleErr<()> {
         let mut fonts = vec![];
         let property = if let Some(font_type) = font_type {
@@ -98,6 +107,9 @@ impl Fonts {
         Ok(())
     }
 
+    /// Reads specified font.
+    /// Font must be available or this will return an error.
+    /// It is recommended to use fonts from `Fonts::available_fonts()`.
     pub fn read(&mut self, font_name: &str) -> NeedleErr<Source> {
         let available_fonts = if let Some(ref available_fonts) = self.available_fonts {
             available_fonts.clone()
@@ -129,6 +141,9 @@ impl Fonts {
         }
     }
 
+    /// Returns the font names of available fonts.
+    /// - Note:
+    /// Available fonts must be queried at least once with `Fonts::query_fonts()`
     pub fn font_names(&self) -> Option<Box<[String]>> {
         if let Some(ref available_fonts) = self.available_fonts {
             let mut output = vec![];
