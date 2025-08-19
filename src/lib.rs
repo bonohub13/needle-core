@@ -50,8 +50,7 @@ pub enum NeedleLabel<'a> {
     Renderer(&'a str),
     Shader(&'a str),
     Texture(&'a str),
-    VertexBuffer(&'a str),
-    IndexBuffer(&'a str),
+    Buffer(&'a str),
     UniformBuffer(&'a str),
     BindGroupLayout(&'a str),
     BindGroup(&'a str),
@@ -123,18 +122,11 @@ impl<'a> Display for NeedleLabel<'a> {
                     format!("{label} Texture")
                 }
             }
-            Self::VertexBuffer(label) => {
+            Self::Buffer(label) => {
                 if label.is_empty() {
-                    "Vertex Buffer".to_string()
+                    "Buffer".to_string()
                 } else {
-                    format!("{label} Vertex Buffer")
-                }
-            }
-            Self::IndexBuffer(label) => {
-                if label.is_empty() {
-                    "Index Buffer".to_string()
-                } else {
-                    format!("{label} Index Buffer")
+                    format!("{label} Buffer")
                 }
             }
             Self::UniformBuffer(label) => {

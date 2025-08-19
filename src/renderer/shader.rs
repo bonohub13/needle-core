@@ -1,23 +1,17 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-use crate::{NeedleErr, NeedleError, NeedleLabel, State};
+use crate::{Buffer, NeedleErr, NeedleError, NeedleLabel, State};
 use std::{
     fs::OpenOptions,
     io::Read,
     path::{Path, PathBuf},
 };
-use wgpu::{Buffer, Device, Queue, RenderPass, RenderPipeline, ShaderModule, SurfaceConfiguration};
+use wgpu::{Device, Queue, RenderPass, RenderPipeline, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 
 pub struct ShaderRenderer {
-    _vert_shader: ShaderModule,
-    _frag_shader: ShaderModule,
-    _vert_shader_code: Box<[u8]>,
-    _frag_shader_code: Box<[u8]>,
-    vertex_buffers: Vec<Buffer>,
-    indices: Option<(i32, Box<[u16]>)>,
-    index_buffers: Option<Buffer>,
+    buffer: Buffer,
     pipeline: RenderPipeline,
 }
 
@@ -27,14 +21,10 @@ pub struct ShaderRendererDescriptor<'desc> {
     pub vert_shader_path: PathBuf,
     /// Path to fragment shader
     pub frag_shader_path: PathBuf,
-    /// Vertex buffers
-    pub vertex_buffers: &'desc [wgpu::Buffer],
+    /// Buffer
+    pub buffer: Buffer,
     /// Buffer layouts of Vertex buffer
-    pub vertex_buffer_layouts: &'desc [wgpu::VertexBufferLayout<'desc>],
-    /// Indices index buffer
-    pub indices: Option<(i32, Box<[u16]>)>,
-    /// Index buffer
-    pub index_buffers: Option<wgpu::Buffer>,
+    pub vertex_buffer_layouts: wgpu::VertexBufferLayout<'desc>,
     /// Depth Stencil
     pub depth_stencil: Option<wgpu::DepthStencilState>,
     /// Label used for vertex buffer and index buffer
@@ -46,14 +36,6 @@ impl ShaderRenderer {
     /// Vertex buffer must be passed, however index buffer is optional.
     /// For further specifications, refer to ShaderRendererDescriptor.
     pub fn new(state: &State, desc: &ShaderRendererDescriptor) -> NeedleErr<Self> {
-        // Each buffer must have their bind group layout and bind group
-        if desc.vertex_buffers.len() != desc.vertex_buffer_layouts.len() {
-            return Err(NeedleError::InvalidBufferRegistration);
-        }
-        if desc.indices.is_some() != desc.index_buffers.is_some() {
-            return Err(NeedleError::InvalidBufferRegistration);
-        }
-
         let label = match desc.label {
             Some(label) => label.to_string(),
             None => "Render".to_string(),
@@ -93,7 +75,7 @@ impl ShaderRenderer {
                     vertex: wgpu::VertexState {
                         module: &vert_shader,
                         entry_point: Some("main"),
-                        buffers: desc.vertex_buffer_layouts,
+                        buffers: &[desc.vertex_buffer_layouts.clone()],
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                     },
                     fragment: Some(wgpu::FragmentState {
@@ -126,13 +108,7 @@ impl ShaderRenderer {
                 });
 
         Ok(Self {
-            _vert_shader_code: vert_shader_code,
-            _frag_shader_code: frag_shader_code,
-            _vert_shader: vert_shader,
-            _frag_shader: frag_shader,
-            vertex_buffers: desc.vertex_buffers.to_vec(),
-            indices: desc.indices.clone(),
-            index_buffers: desc.index_buffers.clone(),
+            buffer: desc.buffer.clone(),
             pipeline: render_pipeline,
         })
     }
@@ -145,23 +121,17 @@ impl ShaderRenderer {
 
     /// Returns reference to vertex buffer.
     #[inline]
-    pub fn vertex_buffer(&self, index: usize) -> &Buffer {
-        &self.vertex_buffers[index]
+    pub fn buffer(&self) -> &Buffer {
+        &self.buffer
     }
 
     /// Overwrites all vertex buffers.
     /// Pre-existing vertex buffers are all destroyed.
-    pub fn set_vertex_buffer(&mut self, buffer: &[Buffer]) -> NeedleErr<()> {
-        if buffer.len() != self.vertex_buffers.len() {
-            Err(NeedleError::InvalidBufferRegistration)
-        } else {
-            self.vertex_buffers.iter_mut().for_each(|buf| {
-                buf.destroy();
-            });
-            self.vertex_buffers = buffer.to_vec();
+    pub fn set_buffer(&mut self, buffer: Buffer) -> NeedleErr<()> {
+        self.buffer.destroy();
+        self.buffer = buffer;
 
-            Ok(())
-        }
+        Ok(())
     }
 
     fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
@@ -197,15 +167,7 @@ impl super::Renderer for ShaderRenderer {
     fn render(&mut self, render_pass: &mut RenderPass) -> NeedleErr<()> {
         /* Vertex buffers without index buffer requires manual draw call. */
         render_pass.set_pipeline(&self.pipeline);
-        for (i, vertex_buffer) in self.vertex_buffers.iter().enumerate() {
-            render_pass.set_vertex_buffer(i as u32, vertex_buffer.slice(..));
-        }
-        if let (Some(index_buffer), Some((base_vertex, indices))) =
-            (self.index_buffers.as_ref(), self.indices.as_ref())
-        {
-            render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..indices.len() as u32, *base_vertex, 0..1);
-        }
+        self.buffer.submit(render_pass);
 
         Ok(())
     }
