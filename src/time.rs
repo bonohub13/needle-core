@@ -211,22 +211,34 @@ impl Time {
     }
 }
 
+impl TimeFormat {
+    pub const HOUR_MIN_SEC: i8 = 0;
+    pub const HOUR_MIN_SEC_MSEC: i8 = 1;
+    pub const MAX: i8 = Self::HOUR_MIN_SEC_MSEC;
+}
+
 macro_rules! time_format_impl_from {
     ($type:ty) => {
         impl From<TimeFormat> for $type {
             fn from(element: TimeFormat) -> Self {
+                const HOUR_MIN_SEC: $type = TimeFormat::HOUR_MIN_SEC as $type;
+                const HOUR_MIN_SEC_MSEC: $type = TimeFormat::HOUR_MIN_SEC_MSEC as $type;
+
                 match element {
-                    TimeFormat::HourMinSec => 0,
-                    TimeFormat::HourMinSecMSec => 1,
+                    TimeFormat::HourMinSec => HOUR_MIN_SEC,
+                    TimeFormat::HourMinSecMSec => HOUR_MIN_SEC_MSEC,
                 }
             }
         }
 
         impl From<$type> for TimeFormat {
             fn from(val: $type) -> Self {
+                const HOUR_MIN_SEC: $type = TimeFormat::HOUR_MIN_SEC as $type;
+                const HOUR_MIN_SEC_MSEC: $type = TimeFormat::HOUR_MIN_SEC_MSEC as $type;
+
                 match val {
-                    1 => TimeFormat::HourMinSecMSec,
-                    _ => TimeFormat::HourMinSec,
+                    HOUR_MIN_SEC_MSEC => TimeFormat::HourMinSecMSec,
+                    HOUR_MIN_SEC | _ => TimeFormat::HourMinSec,
                 }
             }
         }
@@ -251,24 +263,39 @@ impl Display for TimeFormat {
     }
 }
 
+impl OpMode {
+    pub const CLOCK: i8 = 0;
+    pub const COUNT_UP_TIMER: i8 = 1;
+    pub const COUNT_DOWN_TIMER: i8 = 2;
+    pub const MAX: i8 = Self::COUNT_DOWN_TIMER;
+}
+
 macro_rules! op_mode_impl_from {
     ($type:ty) => {
         impl From<OpMode> for $type {
             fn from(element: OpMode) -> Self {
+                const CLOCK: $type = OpMode::CLOCK as $type;
+                const COUNT_UP_TIMER: $type = OpMode::COUNT_UP_TIMER as $type;
+                const COUNT_DOWN_TIMER: $type = OpMode::COUNT_DOWN_TIMER as $type;
+
                 match element {
-                    OpMode::Clock => 0,
-                    OpMode::CountUpTimer => 1,
-                    OpMode::CountDownTimer(_) => 2,
+                    OpMode::Clock => CLOCK,
+                    OpMode::CountUpTimer => COUNT_UP_TIMER,
+                    OpMode::CountDownTimer(_) => COUNT_DOWN_TIMER,
                 }
             }
         }
 
         impl From<$type> for OpMode {
             fn from(val: $type) -> Self {
+                const CLOCK: $type = OpMode::CLOCK as $type;
+                const COUNT_UP_TIMER: $type = OpMode::COUNT_UP_TIMER as $type;
+                const COUNT_DOWN_TIMER: $type = OpMode::COUNT_DOWN_TIMER as $type;
+
                 match val {
-                    1 => OpMode::CountUpTimer,
-                    2 => OpMode::CountDownTimer(Duration::new(0, 0)),
-                    _ => OpMode::Clock,
+                    COUNT_UP_TIMER => OpMode::CountUpTimer,
+                    COUNT_DOWN_TIMER => OpMode::CountDownTimer(Duration::new(0, 0)),
+                    CLOCK | _ => OpMode::Clock,
                 }
             }
         }
