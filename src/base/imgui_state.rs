@@ -20,29 +20,41 @@ pub enum ImguiMode {
     Background,
     ClockTimer,
     Fps,
-    Invalid,
+}
+
+impl ImguiMode {
+    pub const BACKGROUND: i8 = 0;
+    pub const CLOCK_TIMER: i8 = 1;
+    pub const FPS: i8 = 2;
+    pub const MAX: i8 = Self::FPS;
 }
 
 macro_rules! imgui_mode_from {
     ( $type:ty ) => {
         impl From<ImguiMode> for $type {
             fn from(mode: ImguiMode) -> Self {
+                const BACKGROUND: $type = ImguiMode::BACKGROUND as $type;
+                const CLOCK_TIMER: $type = ImguiMode::CLOCK_TIMER as $type;
+                const FPS: $type = ImguiMode::FPS as $type;
+
                 match mode {
-                    ImguiMode::Background => 0,
-                    ImguiMode::ClockTimer => 1,
-                    ImguiMode::Fps => 2,
-                    ImguiMode::Invalid => Self::MAX,
+                    ImguiMode::Background => BACKGROUND,
+                    ImguiMode::ClockTimer => CLOCK_TIMER,
+                    ImguiMode::Fps => FPS,
                 }
             }
         }
 
         impl From<$type> for ImguiMode {
             fn from(val: $type) -> Self {
+                const BACKGROUND: $type = ImguiMode::BACKGROUND as $type;
+                const CLOCK_TIMER: $type = ImguiMode::CLOCK_TIMER as $type;
+                const FPS: $type = ImguiMode::FPS as $type;
+
                 match val {
-                    0 => ImguiMode::Background,
-                    1 => ImguiMode::ClockTimer,
-                    2 => ImguiMode::Fps,
-                    _ => ImguiMode::Invalid,
+                    BACKGROUND => ImguiMode::Background,
+                    CLOCK_TIMER => ImguiMode::ClockTimer,
+                    FPS | _ => ImguiMode::Fps,
                 }
             }
         }
@@ -62,7 +74,6 @@ impl Display for ImguiMode {
             Self::Background => write!(f, "Background"),
             Self::ClockTimer => write!(f, "Clock/Timer"),
             Self::Fps => write!(f, "FPS"),
-            Self::Invalid => write!(f, "Invalid"),
         }
     }
 }
