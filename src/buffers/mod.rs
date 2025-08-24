@@ -10,10 +10,10 @@ use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
 #[derive(Debug, Clone)]
 pub struct Buffer {
-    vertex_buffer: wgpu::Buffer,
+    buffer: wgpu::Buffer,
     index: u32,
     slot: u32,
-    index_buffer: Option<wgpu::Buffer>,
+    offset: u64,
     index_format: Option<wgpu::IndexFormat>,
 }
 
@@ -34,11 +34,33 @@ impl Buffer {
         } else {
             vertices.len()
         } as u32;
-        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: Some(&label.to_string()),
-            contents: unsafe { utils::data_into_bytes(vertices) },
-            usage: wgpu::BufferUsages::VERTEX,
-        });
+        let (buffer, offset) = match indices {
+            Some(indices) => {
+                let (contents, offset): (Vec<u8>, u64) = {
+                    let vertices = unsafe { utils::data_into_bytes(vertices) };
+                    let indices = unsafe { utils::data_into_bytes(indices) };
+
+                    ([vertices, indices].concat(), vertices.len() as u64)
+                };
+                let buffer = device.create_buffer_init(&BufferInitDescriptor {
+                    label: Some(&label.to_string()),
+                    contents: &contents,
+                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::INDEX,
+                });
+
+                (buffer, offset)
+            }
+            None => {
+                let contents = unsafe { utils::data_into_bytes(vertices) };
+                let buffer = device.create_buffer_init(&BufferInitDescriptor {
+                    label: Some(&label.to_string()),
+                    contents,
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+
+                (buffer, contents.len() as u64)
+            }
+        };
         let index_format = indices.map(|_| {
             if size_of::<Uint>() == size_of::<u16>() {
                 wgpu::IndexFormat::Uint16
@@ -46,28 +68,21 @@ impl Buffer {
                 wgpu::IndexFormat::Uint32
             }
         });
-        let index_buffer = indices.map(|indices| {
-            device.create_buffer_init(&BufferInitDescriptor {
-                label: Some(&label.to_string()),
-                contents: unsafe { utils::data_into_bytes(indices) },
-                usage: wgpu::BufferUsages::INDEX,
-            })
-        });
 
         Self {
-            vertex_buffer,
+            buffer,
             index,
             slot,
-            index_buffer,
+            offset,
             index_format,
         }
     }
 
     #[inline]
     pub fn submit(&self, render_pass: &mut wgpu::RenderPass) {
-        render_pass.set_vertex_buffer(self.slot, self.vertex_buffer.slice(..));
-        if let (Some(buffer), Some(format)) = (self.index_buffer.as_ref(), self.index_format) {
-            render_pass.set_index_buffer(buffer.slice(..), format);
+        render_pass.set_vertex_buffer(self.slot, self.buffer.slice(..self.offset));
+        if let Some(format) = self.index_format {
+            render_pass.set_index_buffer(self.buffer.slice(self.offset..), format);
             render_pass.draw_indexed(0..self.index, 0, 0..1);
         } else {
             render_pass.draw(0..self.index, 0..1);
@@ -76,9 +91,6 @@ impl Buffer {
 
     #[inline]
     pub fn destroy(&self) {
-        self.vertex_buffer.destroy();
-        if let Some(buffer) = &self.index_buffer {
-            buffer.destroy()
-        }
+        self.buffer.destroy();
     }
 }
