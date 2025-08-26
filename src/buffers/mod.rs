@@ -1,8 +1,10 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+mod ubo;
 mod vertex;
 
+pub use ubo::*;
 pub use vertex::*;
 
 use crate::{utils, NeedleLabel, State};
@@ -83,6 +85,12 @@ impl Buffer {
         render_pass.set_vertex_buffer(self.slot, self.buffer.slice(..self.offset));
         if let Some(format) = self.index_format {
             render_pass.set_index_buffer(self.buffer.slice(self.offset..), format);
+        }
+    }
+
+    #[inline]
+    pub fn draw(&self, render_pass: &mut wgpu::RenderPass) {
+        if self.index_format.is_some() {
             render_pass.draw_indexed(0..self.index, 0, 0..1);
         } else {
             render_pass.draw(0..self.index, 0..1);

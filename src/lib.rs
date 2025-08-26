@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 mod base;
+mod bind_group;
 mod buffers;
 mod config;
 mod error;
@@ -12,6 +13,7 @@ mod time;
 mod utils;
 
 pub use base::*;
+pub use bind_group::*;
 pub use buffers::*;
 pub use config::*;
 pub use error::*;
@@ -19,7 +21,7 @@ pub use notify::NotifyType;
 pub use renderer::*;
 pub use texture::*;
 pub use time::*;
-pub use utils::{Font, FontType, FontTypes, Fonts};
+pub use utils::*;
 
 #[cfg(target_os = "windows")]
 pub use notify::Notify;

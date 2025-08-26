@@ -1,17 +1,19 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-use crate::{Buffer, NeedleErr, NeedleError, NeedleLabel, State};
+use crate::{BindGroupLayout, Buffer, NeedleErr, NeedleError, NeedleLabel, State, Ubo};
 use std::{
     fs::OpenOptions,
     io::Read,
     path::{Path, PathBuf},
 };
-use wgpu::{Device, Queue, RenderPass, RenderPipeline, SurfaceConfiguration};
+use wgpu::{Queue, RenderPass, RenderPipeline};
 use winit::dpi::PhysicalSize;
 
+#[derive(Debug)]
 pub struct ShaderRenderer {
     buffer: Buffer,
+    ubo: Option<Ubo>,
     pipeline: RenderPipeline,
 }
 
@@ -23,8 +25,12 @@ pub struct ShaderRendererDescriptor<'desc> {
     pub frag_shader_path: PathBuf,
     /// Buffer
     pub buffer: Buffer,
+    /// UBO
+    pub ubo: Option<Ubo>,
     /// Buffer layouts of Vertex buffer
-    pub vertex_buffer_layouts: wgpu::VertexBufferLayout<'desc>,
+    pub vertex_buffer_layout: wgpu::VertexBufferLayout<'desc>,
+    /// Bind group layouts
+    pub bind_group_layouts: Vec<BindGroupLayout>,
     /// Depth Stencil
     pub depth_stencil: Option<wgpu::DepthStencilState>,
     /// Label used for vertex buffer and index buffer
@@ -58,12 +64,17 @@ impl ShaderRenderer {
                 }),
             )
         };
+        let bind_group_layouts = desc
+            .bind_group_layouts
+            .iter()
+            .map(|layout| layout.layout())
+            .collect::<Vec<_>>();
         let render_pipeline_layout =
             state
                 .device()
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some(&NeedleLabel::PipelineLayout(&label).to_string()),
-                    bind_group_layouts: &[],
+                    bind_group_layouts: &bind_group_layouts,
                     push_constant_ranges: &[],
                 });
         let render_pipeline =
@@ -75,7 +86,7 @@ impl ShaderRenderer {
                     vertex: wgpu::VertexState {
                         module: &vert_shader,
                         entry_point: Some("main"),
-                        buffers: &[desc.vertex_buffer_layouts.clone()],
+                        buffers: &[desc.vertex_buffer_layout.clone()],
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                     },
                     fragment: Some(wgpu::FragmentState {
@@ -109,6 +120,7 @@ impl ShaderRenderer {
 
         Ok(Self {
             buffer: desc.buffer.clone(),
+            ubo: desc.ubo.clone(),
             pipeline: render_pipeline,
         })
     }
@@ -125,16 +137,22 @@ impl ShaderRenderer {
         &self.buffer
     }
 
-    /// Overwrites all vertex buffers.
-    /// Pre-existing vertex buffers are all destroyed.
-    pub fn set_buffer(&mut self, buffer: Buffer) -> NeedleErr<()> {
-        self.buffer.destroy();
-        self.buffer = buffer;
+    /// Update UBO.
+    /// Does nothing if renderer doesn't have an UBO.
+    pub fn write_buffer<T>(&mut self, data: &T, queue: &Queue) -> NeedleErr<()>
+    where
+        T: Sized + Clone,
+    {
+        if let Some(ubo) = &mut self.ubo {
+            ubo.update(data, queue);
+        }
 
         Ok(())
     }
 
     fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
+        const BYTE_ALIGNMENT: usize = 4; // Check and enforce 4byte alignment
+
         let mut reader = match OpenOptions::new().read(true).open(path) {
             Ok(file) => Ok(file),
             Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
@@ -145,8 +163,9 @@ impl ShaderRenderer {
             Ok(_) => Ok(()),
             Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
         }?;
-        if (buffer.len() & 4) != 0 {
-            buffer.extend(std::iter::repeat_n(0, buffer.len() % 4));
+        if buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
+            // Append 0 to buffer to force 4byte alignment
+            buffer.extend(std::iter::repeat_n(0, buffer.len() % BYTE_ALIGNMENT));
         }
 
         let buffer = Box::from_iter(buffer);
@@ -158,16 +177,21 @@ impl ShaderRenderer {
 impl super::Renderer for ShaderRenderer {
     fn resize(&mut self, _size: &PhysicalSize<u32>) {}
 
-    fn update(&mut self, _queue: &Queue, _config: &SurfaceConfiguration) {}
+    fn update(&mut self, _state: &State) {}
 
-    fn prepare(&mut self, _margin: f32, _device: &Device, _queue: &Queue) -> NeedleErr<()> {
+    fn prepare(&mut self, _margin: f32, _state: &State) -> NeedleErr<()> {
         Ok(())
     }
 
     fn render(&mut self, render_pass: &mut RenderPass) -> NeedleErr<()> {
         /* Vertex buffers without index buffer requires manual draw call. */
         render_pass.set_pipeline(&self.pipeline);
+
         self.buffer.submit(render_pass);
+        if let Some(ubo) = &self.ubo {
+            ubo.submit(render_pass);
+        }
+        self.buffer.draw(render_pass);
 
         Ok(())
     }
