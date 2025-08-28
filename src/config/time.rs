@@ -8,8 +8,11 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct TimeConfig {
+    /// Time text visualization format
     pub format: TimeFormat,
+    /// Name font to use
     pub font: Option<String>,
+    /// Text config
     pub config: Text,
 }
 

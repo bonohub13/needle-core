@@ -3,9 +3,9 @@
 
 mod imgui_state;
 
-use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
+use crate::{NeedleErr, NeedleError, NeedleLabel};
 use std::sync::Arc;
-use wgpu::{util::DeviceExt, CompositeAlphaMode, Device, Queue, Surface, SurfaceConfiguration};
+use wgpu::{CompositeAlphaMode, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
 pub use imgui_state::{ImguiMode, ImguiState};
@@ -179,29 +179,5 @@ impl<'a> State<'a> {
                 Err(err)
             }
         }
-    }
-
-    /// Create vertex buffer from vertices.
-    /// This requires label for the vertex buffer.
-    /// (Can be empty if only a single vertex buffer is used)
-    pub fn create_vertex_buffer(&self, label: &str, vertices: &[Vertex]) -> wgpu::Buffer {
-        self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&NeedleLabel::VertexBuffer(label).to_string()),
-                contents: bytemuck::cast_slice(vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            })
-    }
-
-    /// Create index buffer from indices
-    /// This requires label for the index buffer.
-    /// (Can be empty if only a single index buffer is used)
-    pub fn create_index_buffer(&self, label: &str, indices: &[u16]) -> wgpu::Buffer {
-        self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&NeedleLabel::IndexBuffer(label).to_string()),
-                contents: bytemuck::cast_slice(indices),
-                usage: wgpu::BufferUsages::INDEX,
-            })
     }
 }

@@ -43,8 +43,8 @@ impl Fonts {
 
     /// Creates new instance of Fonts.
     /// - Note:
-    /// It is initialized with no available fonts.
-    /// Available fonts within a system must be queried later on.
+    ///   It is initialized with no available fonts.
+    ///   Available fonts within a system must be queried later on.
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -143,7 +143,7 @@ impl Fonts {
 
     /// Returns the font names of available fonts.
     /// - Note:
-    /// Available fonts must be queried at least once with `Fonts::query_fonts()`
+    ///   Available fonts must be queried at least once with `Fonts::query_fonts()`
     pub fn font_names(&self) -> Option<Box<[String]>> {
         if let Some(ref available_fonts) = self.available_fonts {
             let mut output = vec![];

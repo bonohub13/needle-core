@@ -3,7 +3,7 @@
 
 use crate::{FontTypes, Fonts, NeedleErr, NeedleError, State, Text};
 use glyphon::{Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
-use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
+use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
 pub struct TextRenderer {
@@ -145,21 +145,21 @@ impl super::Renderer for TextRenderer {
         self.size = *size
     }
 
-    fn update(&mut self, queue: &Queue, config: &SurfaceConfiguration) {
+    fn update(&mut self, state: &State) {
         self.viewport.update(
-            queue,
+            state.queue(),
             glyphon::Resolution {
-                width: config.width,
-                height: config.height,
+                width: state.surface_config().width,
+                height: state.surface_config().height,
             },
         )
     }
 
-    fn prepare(&mut self, margin: f32, device: &Device, queue: &Queue) -> NeedleErr<()> {
+    fn prepare(&mut self, margin: f32, state: &State) -> NeedleErr<()> {
         let (left, top) = self.config.position(&self.size, &self.text_size(), margin);
         let result = self.renderer.prepare(
-            device,
-            queue,
+            state.device(),
+            state.queue(),
             &mut self.system,
             &mut self.atlas,
             &self.viewport,
