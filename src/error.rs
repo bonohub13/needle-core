@@ -54,6 +54,8 @@ pub enum NeedleError {
     ScreenResolutionChanged,
     #[error("Renderer | Buffer without bind group/bind group layout has been registered")]
     InvalidBufferRegistration,
+    #[error("Renderer | Binding buffer layout has not been registered")]
+    InvalidBindingBufferLayout,
     #[error("Renderer | Buffer without bind group/bind group layout has been registered ({0})")]
     RendererUpdateFailure(Box<dyn StdError>),
     #[error("Renderer | Failed to read specified shader file (SPIR-V: {0})")]

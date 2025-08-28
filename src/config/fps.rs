@@ -7,8 +7,11 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct FpsConfig {
+    /// Enable FPS visualization
     pub enable: bool,
+    /// FPS limit
     pub frame_limit: u8,
+    /// FPS text configuration
     pub config: Text,
 }
 

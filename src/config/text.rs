@@ -7,8 +7,11 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct Text {
+    /// Text visualization multiplier scale
     pub scale: f32,
+    /// Text color
     pub color: [u8; 4],
+    /// Text position
     pub position: Position,
 }
 
