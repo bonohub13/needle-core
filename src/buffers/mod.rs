@@ -20,6 +20,8 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    /// Create new Buffer
+    /// - Optional: indices for vertex
     pub fn new<Uint>(
         state: &State,
         label: NeedleLabel,
@@ -80,6 +82,7 @@ impl Buffer {
         }
     }
 
+    /// Submit buffer to render pass
     #[inline]
     pub fn submit(&self, render_pass: &mut wgpu::RenderPass) {
         render_pass.set_vertex_buffer(self.slot, self.buffer.slice(..self.offset));
@@ -88,6 +91,7 @@ impl Buffer {
         }
     }
 
+    /// Draw contents of buffer via render pass
     #[inline]
     pub fn draw(&self, render_pass: &mut wgpu::RenderPass) {
         if self.index_format.is_some() {
@@ -97,6 +101,7 @@ impl Buffer {
         }
     }
 
+    /// Destroy buffer
     #[inline]
     pub fn destroy(&self) {
         self.buffer.destroy();

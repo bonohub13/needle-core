@@ -5,6 +5,7 @@ mod fonts;
 
 pub use fonts::{Font, FontType, FontTypes, Fonts};
 
+/// Crop value to maximum value
 pub(crate) fn crop<T: PartialOrd>(val: T, max: T) -> T {
     if val < max {
         val
@@ -13,6 +14,7 @@ pub(crate) fn crop<T: PartialOrd>(val: T, max: T) -> T {
     }
 }
 
+/// Parse datas into bytes
 pub(crate) unsafe fn data_into_bytes<T>(data: &[T]) -> &[u8]
 where
     T: Sized,

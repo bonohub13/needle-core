@@ -9,11 +9,13 @@ pub struct BindGroupLayout {
 }
 
 impl BindGroupLayout {
+    /// Creates instance of builder for BindGroupLayout
     #[inline]
     pub const fn builder() -> BindGroupLayoutBuilder {
         BindGroupLayoutBuilder { entries: vec![] }
     }
 
+    /// Get inner wgpu::BindGroupLayout
     #[inline]
     pub const fn layout(&self) -> &wgpu::BindGroupLayout {
         &self.layout
@@ -26,6 +28,7 @@ pub struct BindGroupLayoutBuilder {
 }
 
 impl BindGroupLayoutBuilder {
+    /// Add UBO to BindGroupLayout
     pub fn add_ubo(&mut self) -> Self {
         self.entries.push(wgpu::BindGroupLayoutEntry {
             binding: self.entries.len() as u32,
@@ -41,6 +44,7 @@ impl BindGroupLayoutBuilder {
         self.clone()
     }
 
+    /// Build new instance of BindGroupLayout
     pub fn build(&self, device: &wgpu::Device, label: NeedleLabel) -> BindGroupLayout {
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some(&label.to_string()),

@@ -86,7 +86,7 @@ impl ShaderRenderer {
                     vertex: wgpu::VertexState {
                         module: &vert_shader,
                         entry_point: Some("main"),
-                        buffers: &[desc.vertex_buffer_layout.clone()],
+                        buffers: std::slice::from_ref(&desc.vertex_buffer_layout),
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                     },
                     fragment: Some(wgpu::FragmentState {

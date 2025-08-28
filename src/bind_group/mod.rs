@@ -13,6 +13,7 @@ pub struct BindGroup {
 }
 
 impl BindGroup {
+    /// Create new instance of builder for BindGroup
     #[inline]
     pub const fn builder() -> BindGroupBuilder<'static> {
         BindGroupBuilder {
@@ -21,6 +22,7 @@ impl BindGroup {
         }
     }
 
+    /// Get inner BindGroup
     #[inline]
     pub const fn bind_group(&self) -> &wgpu::BindGroup {
         &self.bind_group
@@ -34,6 +36,7 @@ pub struct BindGroupBuilder<'a> {
 }
 
 impl<'a> BindGroupBuilder<'a> {
+    /// Set BindGroupLayout
     #[inline]
     pub fn set_layout(&mut self, layout: &'a BindGroupLayout) -> Self {
         self.layout = Some(layout);
@@ -41,6 +44,7 @@ impl<'a> BindGroupBuilder<'a> {
         self.clone()
     }
 
+    /// Set buffer to BindGroup
     #[inline]
     pub fn set_buffer(&mut self, buffer: &'a wgpu::Buffer, offset: u64) -> Self {
         self.entries.push(wgpu::BindGroupEntry {
@@ -55,6 +59,7 @@ impl<'a> BindGroupBuilder<'a> {
         self.clone()
     }
 
+    /// Build new instance of BindGroup
     pub fn build(&self, device: &wgpu::Device, label: NeedleLabel) -> NeedleErr<BindGroup> {
         let bind_group = match self.layout {
             Some(layout) => Ok(device.create_bind_group(&wgpu::BindGroupDescriptor {

@@ -12,6 +12,7 @@ pub struct Ubo {
 }
 
 impl Ubo {
+    /// Create new UBO
     pub fn new<T>(
         device: &wgpu::Device,
         label: NeedleLabel,
@@ -41,20 +42,23 @@ impl Ubo {
         })
     }
 
+    /// Update data in UBO
     pub fn update<T>(&mut self, data: &T, queue: &wgpu::Queue)
     where
         T: Sized + Clone,
     {
-        let contents = unsafe { utils::data_into_bytes(&[data.clone()]) }.to_vec();
+        let contents = unsafe { utils::data_into_bytes(std::slice::from_ref(data)) }.to_vec();
 
         queue.write_buffer(&self.buffer, self.offset, &contents);
     }
 
+    /// Submit bind group of UBO to render pass
     #[inline]
     pub fn submit(&self, render_pass: &mut wgpu::RenderPass) {
         render_pass.set_bind_group(self.slot, self.bind_group.bind_group(), &[]);
     }
 
+    /// Destroy buffer
     #[inline]
     pub fn destroy(&self) {
         self.buffer.destroy();
