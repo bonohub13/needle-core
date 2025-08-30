@@ -133,11 +133,8 @@ impl<'a> NeedleConfig {
 
         match ProjectDirs::from("com", "bonohub13", "needle") {
             Some(app_dir) => {
-                if (!app_dir.config_dir().exists()) && create_dir {
-                    match fs::create_dir_all(app_dir.config_dir()) {
-                        Ok(_) => Ok(()),
-                        Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
-                    }?;
+                if create_dir {
+                    Self::create_dir(app_dir.config_dir())?
                 }
 
                 config_path = app_dir.config_dir().to_path_buf();
@@ -178,6 +175,18 @@ impl<'a> NeedleConfig {
             Ok(_) => Ok(()),
             Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
         }
+    }
+
+    /// Create directory of specified path recursively.
+    pub fn create_dir(path: &Path) -> NeedleErr<()> {
+        if !path.exists() {
+            match fs::create_dir_all(path) {
+                Ok(_) => Ok(()),
+                Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
+            }?;
+        }
+
+        Ok(())
     }
 
     fn config_file(create_dir: bool) -> NeedleErr<PathBuf> {
