@@ -27,8 +27,11 @@ use std::{
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NeedleConfig {
+    /// Background color (RGBA)
     pub background_color: [f32; 4],
+    /// Time text config
     pub time: TimeConfig,
+    /// FPS text config
     pub fps: FpsConfig,
 }
 
@@ -39,6 +42,10 @@ impl<'a> NeedleConfig {
     const NEWLINE: &'a str = "\n";
     const CONFIG_FILE: &'a str = "config.toml";
 
+    /// Output config to a file/stdout.
+    /// Default path is set to either of the following depending on the OS.
+    /// - Linux: $HOME/.config/needle/config.toml
+    /// - Windows: %APPDATA%\bonohub13\needle\config.toml
     pub fn config(path: Option<&str>) -> NeedleErr<()> {
         let default_config_file = Self::config_file(true)?;
         let config_file = if let Some(path) = path {
@@ -54,7 +61,11 @@ impl<'a> NeedleConfig {
         Self::write(config_file)
     }
 
-    pub fn from(path: Option<&str>) -> NeedleErr<Self> {
+    /// Read config from specified path.
+    /// Default path is set to either of the following depending on the OS.
+    /// - Linux: $HOME/.config/needle/config.toml
+    /// - Windows: %APPDATA%\bonohub13\needle\config.toml
+    pub fn read(path: Option<&str>) -> NeedleErr<Self> {
         let default_config_file = Self::config_file(false)?;
         let config_file = if let Some(path) = path {
             if path.is_empty() {
@@ -110,6 +121,9 @@ impl<'a> NeedleConfig {
         }
     }
 
+    /// Returns path for config file.
+    /// Returned path is a relative path from default config path.
+    /// If path does not exist, it creates a new directory recursively.
     pub fn config_path(create_dir: bool, relative_path: Option<&str>) -> NeedleErr<PathBuf> {
         let mut config_path: PathBuf;
         let relative_path = match relative_path {
@@ -146,6 +160,7 @@ impl<'a> NeedleConfig {
         Ok(config_path)
     }
 
+    /// Saves the current configuration to the default config path.
     pub fn save_config(&self) -> NeedleErr<()> {
         let default_config_file = Self::config_file(false)?;
         let file = match OpenOptions::new()
@@ -159,7 +174,7 @@ impl<'a> NeedleConfig {
         }?;
         let mut buf_writer = BufWriter::new(file);
 
-        match writeln!(buf_writer, "{}", self) {
+        match writeln!(buf_writer, "{self}") {
             Ok(_) => Ok(()),
             Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
         }
@@ -178,7 +193,7 @@ impl<'a> NeedleConfig {
         let config = Self::default();
 
         if file.as_os_str() == OsStr::new("stdout") {
-            println!("{}", config);
+            println!("{config}");
 
             Ok(())
         } else {
@@ -193,7 +208,7 @@ impl<'a> NeedleConfig {
             }?;
             let mut buf_writer = BufWriter::new(file);
 
-            match writeln!(buf_writer, "{}", config) {
+            match writeln!(buf_writer, "{config}") {
                 Ok(_) => Ok(()),
                 Err(err) => Err(NeedleError::FailedToWriteConfig(err.into())),
             }

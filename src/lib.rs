@@ -2,33 +2,45 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 mod base;
+mod bind_group;
 mod buffers;
 mod config;
 mod error;
+mod notify;
 mod renderer;
 mod texture;
 mod time;
 mod utils;
 
 pub use base::*;
+pub use bind_group::*;
 pub use buffers::*;
 pub use config::*;
 pub use error::*;
+pub use notify::NotifyType;
 pub use renderer::*;
 pub use texture::*;
 pub use time::*;
-pub use utils::{Font, FontType, FontTypes, Fonts};
+pub use utils::*;
+
+#[cfg(target_os = "windows")]
+pub use notify::Notify;
+#[cfg(target_os = "linux")]
+pub use notify::{DialogBackend, Notify};
 
 use std::fmt::{Display, Formatter, Result};
 
+/// Returns version information.
+/// - Package name
+/// - Version
 pub fn version_info() -> String {
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
 
-    format!("{} {}", name, version)
+    format!("{name} {version}")
 }
 
-#[allow(dead_code)]
+/// Labels for wgpu/imgui objects in needle
 #[derive(Debug)]
 pub enum NeedleLabel<'a> {
     ImguiWindow(&'a str),
@@ -40,8 +52,7 @@ pub enum NeedleLabel<'a> {
     Renderer(&'a str),
     Shader(&'a str),
     Texture(&'a str),
-    VertexBuffer(&'a str),
-    IndexBuffer(&'a str),
+    Buffer(&'a str),
     UniformBuffer(&'a str),
     BindGroupLayout(&'a str),
     BindGroup(&'a str),
@@ -54,102 +65,95 @@ impl<'a> Display for NeedleLabel<'a> {
                 if label.is_empty() {
                     "Imgui Window".to_string()
                 } else {
-                    format!("{} Imgui Window", label)
+                    format!("{label} Imgui Window")
                 }
             }
             Self::Device(label) => {
                 if label.is_empty() {
                     "Device".to_string()
                 } else {
-                    format!("{} Device", label)
+                    format!("{label} Device")
                 }
             }
             Self::PipelineLayout(label) => {
                 if label.is_empty() {
                     "Pipeline Layout".to_string()
                 } else {
-                    format!("{} Pipeline Layout", label)
+                    format!("{label} Pipeline Layout")
                 }
             }
             Self::Pipeline(label) => {
                 if label.is_empty() {
                     "Render Pipeline".to_string()
                 } else {
-                    format!("{} Pipeline", label)
+                    format!("{label} Pipeline")
                 }
             }
             Self::CommandEncoder(label) => {
                 if label.is_empty() {
                     "Command Encoder".to_string()
                 } else {
-                    format!("{} Command Encoder", label)
+                    format!("{label} Command Encoder")
                 }
             }
             Self::RenderPass(label) => {
                 if label.is_empty() {
                     "Render Pass".to_string()
                 } else {
-                    format!("{} Render Pass", label)
+                    format!("{label} Render Pass")
                 }
             }
             Self::Renderer(label) => {
                 if label.is_empty() {
                     "Renderer".to_string()
                 } else {
-                    format!("{} Renderer", label)
+                    format!("{label} Renderer")
                 }
             }
             Self::Shader(label) => {
                 if label.is_empty() {
                     "Shader".to_string()
                 } else {
-                    format!("{} Shader", label)
+                    format!("{label} Shader")
                 }
             }
             Self::Texture(label) => {
                 if label.is_empty() {
                     "Texture".to_string()
                 } else {
-                    format!("{} Texture", label)
+                    format!("{label} Texture")
                 }
             }
-            Self::VertexBuffer(label) => {
+            Self::Buffer(label) => {
                 if label.is_empty() {
-                    "Vertex Buffer".to_string()
+                    "Buffer".to_string()
                 } else {
-                    format!("{} Vertex Buffer", label)
-                }
-            }
-            Self::IndexBuffer(label) => {
-                if label.is_empty() {
-                    "Index Buffer".to_string()
-                } else {
-                    format!("{} Index Buffer", label)
+                    format!("{label} Buffer")
                 }
             }
             Self::UniformBuffer(label) => {
                 if label.is_empty() {
                     "Uniform Buffer".to_string()
                 } else {
-                    format!("{} Uniform Buffer", label)
+                    format!("{label} Uniform Buffer")
                 }
             }
             Self::BindGroupLayout(label) => {
                 if label.is_empty() {
                     "Bind Group Layout".to_string()
                 } else {
-                    format!("{} Bind Group Layout", label)
+                    format!("{label} Bind Group Layout")
                 }
             }
             Self::BindGroup(label) => {
                 if label.is_empty() {
                     "Bind Group".to_string()
                 } else {
-                    format!("{} Bind Group", label)
+                    format!("{label} Bind Group")
                 }
             }
         };
 
-        write!(f, "{}", label)
+        write!(f, "{label}")
     }
 }

@@ -1,10 +1,14 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-use crate::{NeedleErr, NeedleError, NeedleLabel, Vertex};
+mod imgui_state;
+
+use crate::{NeedleErr, NeedleError, NeedleLabel};
 use std::sync::Arc;
-use wgpu::{util::DeviceExt, Device, Queue, Surface, SurfaceConfiguration};
+use wgpu::{CompositeAlphaMode, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
+
+pub use imgui_state::{ImguiMode, ImguiState};
 
 pub struct State<'a> {
     size: PhysicalSize<u32>,
@@ -15,6 +19,7 @@ pub struct State<'a> {
 }
 
 impl<'a> State<'a> {
+    /// Create new needle state from winit Window.
     pub async fn new(window: Arc<Window>) -> NeedleErr<Self> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -50,53 +55,78 @@ impl<'a> State<'a> {
         }?;
 
         // Config
-        let surface_caps = surface.get_capabilities(adapter);
-        let surface_format = surface_caps
-            .formats
-            .iter()
-            .find(|f| f.is_srgb())
-            .copied()
-            .unwrap_or(surface_caps.formats[0]);
-        let surface_config = SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width: size.width,
-            height: size.height,
-            present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps.alpha_modes[0],
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
+        let config = {
+            let capabilites = surface.get_capabilities(adapter);
+            let format = capabilites
+                .formats
+                .iter()
+                .find(|f| f.is_srgb())
+                .copied()
+                .unwrap_or(capabilites.formats[0]);
+            let present_mode = capabilites
+                .present_modes
+                .iter()
+                .find(|present_mode| **present_mode == wgpu::PresentMode::Mailbox)
+                .copied()
+                .unwrap_or(capabilites.present_modes[0]);
+            let alpha_mode = capabilites
+                .alpha_modes
+                .iter()
+                .find(|alpha| **alpha == CompositeAlphaMode::PreMultiplied)
+                .copied()
+                .unwrap_or(capabilites.alpha_modes[0]);
+            SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format,
+                width: size.width,
+                height: size.height,
+                present_mode,
+                alpha_mode,
+                view_formats: vec![],
+                desired_maximum_frame_latency: 2,
+            }
         };
+
+        surface.configure(&device, &config);
+
+        #[cfg(debug_assertions)]
+        dbg!(&config);
 
         Ok(Self {
             size,
             surface,
             device,
             queue,
-            config: surface_config,
+            config,
         })
     }
 
+    /// Size of window
     #[inline]
     pub const fn size(&self) -> PhysicalSize<u32> {
         self.size
     }
 
+    /// Returns reference to logical wgpu::Device
     #[inline]
     pub const fn device(&self) -> &Device {
         &self.device
     }
 
+    /// Returns reference to wgpu::Queue
     #[inline]
     pub const fn queue(&self) -> &Queue {
         &self.queue
     }
 
+    /// Returns reference to wgpu::SurfaceConfiguration
     #[inline]
     pub const fn surface_config(&self) -> &SurfaceConfiguration {
         &self.config
     }
 
+    /// Resize the window/surface size.
+    /// Width and height are passed via `winit::dpi::PhysicalSize`
     pub fn resize(&mut self, size: &PhysicalSize<u32>) {
         if (size.width > 0) && (size.height > 0) {
             self.size = *size;
@@ -106,6 +136,8 @@ impl<'a> State<'a> {
         }
     }
 
+    /// Render function to call any renderers' render operation using wgpu::CommandEncoder.
+    /// After all the renderers have finished rendering, the queue is automatically submitted.
     pub fn render<F>(&mut self, render_func: F) -> NeedleErr<()>
     where
         F: FnOnce(&mut wgpu::CommandEncoder) -> NeedleErr<()>,
@@ -123,6 +155,15 @@ impl<'a> State<'a> {
         Ok(())
     }
 
+    /// Get the current texture from Surface.
+    /// Upon failure to retrieve surface texture, return the following errors.
+    /// - Timeout
+    /// - Outdated
+    /// - Lost
+    /// - OutOfMemory
+    /// - Other
+    ///
+    /// These errors are translated from `wgpu::SurfaceError` into `NeedleError`
     pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
         match self.surface.get_current_texture() {
             Ok(texture) => Ok(texture),
@@ -138,23 +179,5 @@ impl<'a> State<'a> {
                 Err(err)
             }
         }
-    }
-
-    pub fn create_vertex_buffer(&self, label: &str, vertices: &[Vertex]) -> wgpu::Buffer {
-        self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&NeedleLabel::VertexBuffer(label).to_string()),
-                contents: bytemuck::cast_slice(vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            })
-    }
-
-    pub fn create_index_buffer(&self, label: &str, indices: &[u16]) -> wgpu::Buffer {
-        self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&NeedleLabel::IndexBuffer(label).to_string()),
-                contents: bytemuck::cast_slice(indices),
-                usage: wgpu::BufferUsages::INDEX,
-            })
     }
 }

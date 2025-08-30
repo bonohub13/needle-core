@@ -21,10 +21,11 @@ fetch:
 	$(CARGO) fetch
 
 update:
-	$(CARGO) update
+	$(CARGO) update --verbose
+	@make fetch
 
 clippy:
-	$(CARGO) clippy
+	$(CARGO) clippy --all-targets
 
 clean:
 	$(CARGO) clean
@@ -40,8 +41,7 @@ addlicense:
 		$(shell find src -type f -name "*.rs")
 
 clippy-docker:
-	@TAG=linux CMD="cargo clippy" make docker-exec
-	@TAG=windows CMD="cargo clippy" make docker-exec
+	@TAG=linux CMD="make clippy" make docker-exec
 
 build-docker: clippy-docker
 	@TAG=linux CMD="cargo build" make docker-exec

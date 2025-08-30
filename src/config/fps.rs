@@ -7,12 +7,17 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct FpsConfig {
+    /// Enable FPS visualization
     pub enable: bool,
+    /// FPS limit
     pub frame_limit: u8,
+    /// FPS text configuration
     pub config: Text,
 }
 
 impl FpsConfig {
+    /// Checks if position of FPS counter is valid.
+    /// Only corners are allowed.
     pub fn is_valid_position(&self) -> bool {
         matches!(
             self.config.position,
@@ -35,14 +40,14 @@ impl Display for FpsConfig {
         for (i, line) in config.iter().enumerate() {
             if line.starts_with("#") {
                 if i == (config.len() - 1) {
-                    return write!(f, "{}", line);
+                    return write!(f, "{line}");
                 } else {
-                    writeln!(f, "{}", line)?;
+                    writeln!(f, "{line}")?;
                 }
             } else if i == (config.len() - 1) {
-                return write!(f, "config.{}", line);
+                return write!(f, "config.{line}");
             } else {
-                writeln!(f, "config.{}", line)?;
+                writeln!(f, "config.{line}")?;
             }
         }
 

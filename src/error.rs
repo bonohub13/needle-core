@@ -54,6 +54,8 @@ pub enum NeedleError {
     ScreenResolutionChanged,
     #[error("Renderer | Buffer without bind group/bind group layout has been registered")]
     InvalidBufferRegistration,
+    #[error("Renderer | Binding buffer layout has not been registered")]
+    InvalidBindingBufferLayout,
     #[error("Renderer | Buffer without bind group/bind group layout has been registered ({0})")]
     RendererUpdateFailure(Box<dyn StdError>),
     #[error("Renderer | Failed to read specified shader file (SPIR-V: {0})")]
@@ -80,6 +82,21 @@ pub enum NeedleError {
     FailedToReadDir(Box<dyn StdError>),
     #[error("Filesystem | Failed to search for files/directories (Path: {0})")]
     FailedToSearchDir(Box<dyn StdError>),
+
+    // Notification related errors
+    #[cfg(target_os = "windows")]
+    #[error("Notify | Failed to show notification (Error code: {0})")]
+    FailedToShowWinNotification(u32),
+    #[cfg(target_os = "linux")]
+    #[error("Notify | Failed to show notification ({0})")]
+    FailedToShowNotification(dialog::Error),
+
+    #[error("Imgui | Failed to prepare frame for UI ({0})")]
+    FailedToPrepareUiFrame(Box<dyn StdError>),
+    #[error("Imgui | Failed to setup UI ({0})")]
+    FailedToSetupUi(Box<dyn StdError>),
+    #[error("Imgui | Failed to render UI ({0})")]
+    FailedToRenderUi(Box<dyn StdError>),
 
     // Other errors
     #[error("Other | Initialization error detected")]

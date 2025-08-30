@@ -12,6 +12,7 @@ pub struct Texture {
 impl Texture {
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
+    /// Create depth texture for 3D rendering
     pub fn create_depth_texture(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
@@ -55,6 +56,8 @@ impl Texture {
         }
     }
 
+    /// Default depth stencil for creaing 3D renderers.
+    #[inline]
     pub fn default_depth_stencil() -> wgpu::DepthStencilState {
         wgpu::DepthStencilState {
             format: Texture::DEPTH_FORMAT,
@@ -65,6 +68,8 @@ impl Texture {
         }
     }
 
+    /// Texture view of current texture.
+    /// Currently, only depth texture creation is possible.
     #[inline]
     pub const fn view(&self) -> &wgpu::TextureView {
         &self.view

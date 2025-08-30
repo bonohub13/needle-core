@@ -3,7 +3,7 @@
 
 use crate::{FontTypes, Fonts, NeedleErr, NeedleError, State, Text};
 use glyphon::{Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
-use wgpu::{Device, Queue, RenderPass, SurfaceConfiguration};
+use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
 pub struct TextRenderer {
@@ -19,6 +19,7 @@ pub struct TextRenderer {
 }
 
 impl TextRenderer {
+    /// Creates new instance of TextRenderer.
     pub fn new(
         state: &State,
         config: &Text,
@@ -75,21 +76,25 @@ impl TextRenderer {
         })
     }
 
+    /// Gets current scale of text.
     #[inline]
     pub const fn scale(&self) -> f32 {
         self.config.scale
     }
 
+    /// Gets list of available fonts
     #[inline]
     pub const fn fonts_mut(&mut self) -> &mut Fonts {
         &mut self.fonts
     }
 
+    /// Overwrite text configuration
     #[inline]
     pub const fn set_config(&mut self, config: &Text) {
         self.config = *config
     }
 
+    /// Get font size (width, height).
     pub fn text_size(&self) -> [f32; 2] {
         let (width, total_lines) = self
             .buffer
@@ -104,6 +109,7 @@ impl TextRenderer {
         ]
     }
 
+    /// Update text to render.
     pub fn set_text(&mut self, text: &str) {
         self.buffer.set_text(
             &mut self.system,
@@ -113,6 +119,7 @@ impl TextRenderer {
         )
     }
 
+    /// Set font to use.
     pub fn set_font(&mut self, font: &str) -> NeedleErr<()> {
         if self.fonts.available_fonts().is_empty() {
             self.fonts.query_fonts(Some(FontTypes::Monospace))?;
@@ -138,21 +145,21 @@ impl super::Renderer for TextRenderer {
         self.size = *size
     }
 
-    fn update(&mut self, queue: &Queue, config: &SurfaceConfiguration) {
+    fn update(&mut self, state: &State) {
         self.viewport.update(
-            queue,
+            state.queue(),
             glyphon::Resolution {
-                width: config.width,
-                height: config.height,
+                width: state.surface_config().width,
+                height: state.surface_config().height,
             },
         )
     }
 
-    fn prepare(&mut self, margin: f32, device: &Device, queue: &Queue) -> NeedleErr<()> {
+    fn prepare(&mut self, margin: f32, state: &State) -> NeedleErr<()> {
         let (left, top) = self.config.position(&self.size, &self.text_size(), margin);
         let result = self.renderer.prepare(
-            device,
-            queue,
+            state.device(),
+            state.queue(),
             &mut self.system,
             &mut self.atlas,
             &self.viewport,

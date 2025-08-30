@@ -33,7 +33,10 @@ pub struct Time {
 impl Time {
     const MINUTE_SECS: u64 = 60;
     const HOUR_SECS: u64 = Self::MINUTE_SECS * 60;
+    const NANOSECS_IN_SECOND: u32 = 1_000_000;
 
+    /// Create new instance of Time.
+    #[inline]
     pub fn new(format: TimeFormat) -> Self {
         Self {
             format,
@@ -44,11 +47,15 @@ impl Time {
         }
     }
 
+    /// Get current operation mode of Time.
     #[inline]
     pub fn mode(&self) -> OpMode {
         self.mode.clone()
     }
 
+    /// Set the operation mode of Time.
+    ///
+    /// For operation mode(s), refer to `OpMode`
     pub fn set_mode(&mut self, mode: OpMode) {
         if self.mode != mode {
             self.mode = mode;
@@ -63,10 +70,24 @@ impl Time {
         }
     }
 
-    pub fn set_format(&mut self, format: TimeFormat) {
+    /// Set the display format of Time.
+    ///
+    /// For time format(s), refer to `TimeFormat`
+    #[inline]
+    pub const fn set_format(&mut self, format: TimeFormat) {
         self.format = format;
     }
 
+    /// Starts/Stops timer (toggled state depends on current state).
+    /// If timer has been started with the state below, the timer continues from previous time.
+    /// 1. Started
+    /// 2. Stopped (remaining duration is not 0)
+    ///
+    /// This only works when `OpMode` is set to either of the following.
+    /// - `CountDownTimer`
+    /// - `CountUpTimer`
+    ///
+    /// If `OpMode` is set to `Clock`, this does nothing.
     pub fn toggle_timer(&mut self) {
         match self.mode {
             OpMode::CountDownTimer(duration) => {
@@ -110,6 +131,13 @@ impl Time {
         }
     }
 
+    /// Returns the current time/remaining duration of timer.
+    /// The return value is formatted with the current format.
+    /// - HourMinSec : `%H%M%S`
+    /// - HourMinSecMSec : `%H%M%S%%f`
+    ///
+    /// For available format(s), refer to `TimeFormat`
+    /// For operation mode(s), refer to `OpMode`
     pub fn current_time(&self) -> String {
         match self.mode {
             OpMode::CountDownTimer(duration) => {
@@ -146,82 +174,71 @@ impl Time {
         }
     }
 
+    /// Format time into string
     fn time_to_str(&self, time: &DateTime<Local>) -> String {
+        let hour = time.hour();
+        let minute = time.minute();
+        let second = time.second();
+
         match self.format {
             TimeFormat::HourMinSec => {
-                let hour = Self::format_to_digit(2, time.hour());
-                let minute = Self::format_to_digit(2, time.minute());
-                let second = Self::format_to_digit(2, time.second());
-
-                format!("{}:{}:{}", hour, minute, second)
+                format!("{hour:02}:{minute:02}:{second:02}")
             }
             TimeFormat::HourMinSecMSec => {
-                let hour = Self::format_to_digit(2, time.hour());
-                let minute = Self::format_to_digit(2, time.minute());
-                let second = Self::format_to_digit(2, time.second());
-                let millisecond = Self::format_to_digit(3, time.nanosecond() / 1_000_000);
+                let millisecond = time.nanosecond() / Self::NANOSECS_IN_SECOND;
 
-                format!("{}:{}:{}.{}", hour, minute, second, millisecond)
+                format!("{hour:02}:{minute:02}:{second:02}.{millisecond:03}")
             }
         }
     }
 
+    /// Format duration into string
     fn duration_to_str(&self, delta: &Duration) -> String {
         let hour = (delta.as_secs() / Self::HOUR_SECS) as u32;
         let minute = (delta.as_secs() / Self::MINUTE_SECS) as u32;
         let second = (delta.as_secs() % Self::MINUTE_SECS) as u32;
+
         match self.format {
             TimeFormat::HourMinSec => {
-                let hour = Self::format_to_digit(2, hour);
-                let minute = Self::format_to_digit(2, minute);
-                let second = Self::format_to_digit(2, second);
-
-                format!("{}:{}:{}", hour, minute, second)
+                format!("{hour:02}:{minute:02}:{second:02}")
             }
             TimeFormat::HourMinSecMSec => {
-                let hour = Self::format_to_digit(2, hour);
-                let minute = Self::format_to_digit(2, minute);
-                let second = Self::format_to_digit(2, second);
-                let millisecond = Self::format_to_digit(3, (delta.as_millis() % 1000) as u32);
+                let millisecond = delta.as_millis() % 1000;
 
-                format!("{}:{}:{}.{}", hour, minute, second, millisecond)
+                format!("{hour:02}:{minute:02}:{second:02}.{millisecond:03}")
             }
         }
     }
+}
 
-    fn format_to_digit(digit: u32, value: u32) -> String {
-        if digit <= 1 {
-            return value.to_string();
-        }
-
-        let mut prefix = String::new();
-
-        for i in 1..digit {
-            if value < 10u32.pow(i) {
-                prefix += "0";
-            }
-        }
-
-        format!("{}{}", prefix, value)
-    }
+impl TimeFormat {
+    pub const HOUR_MIN_SEC: i8 = 0;
+    pub const HOUR_MIN_SEC_MSEC: i8 = 1;
+    pub const MAX: i8 = Self::HOUR_MIN_SEC_MSEC;
 }
 
 macro_rules! time_format_impl_from {
     ($type:ty) => {
         impl From<TimeFormat> for $type {
             fn from(element: TimeFormat) -> Self {
+                const HOUR_MIN_SEC: $type = TimeFormat::HOUR_MIN_SEC as $type;
+                const HOUR_MIN_SEC_MSEC: $type = TimeFormat::HOUR_MIN_SEC_MSEC as $type;
+
                 match element {
-                    TimeFormat::HourMinSec => 0,
-                    TimeFormat::HourMinSecMSec => 1,
+                    TimeFormat::HourMinSec => HOUR_MIN_SEC,
+                    TimeFormat::HourMinSecMSec => HOUR_MIN_SEC_MSEC,
                 }
             }
         }
 
         impl From<$type> for TimeFormat {
             fn from(val: $type) -> Self {
+                const HOUR_MIN_SEC: $type = TimeFormat::HOUR_MIN_SEC as $type;
+                const HOUR_MIN_SEC_MSEC: $type = TimeFormat::HOUR_MIN_SEC_MSEC as $type;
+
                 match val {
-                    1 => TimeFormat::HourMinSecMSec,
-                    _ => TimeFormat::HourMinSec,
+                    HOUR_MIN_SEC_MSEC => TimeFormat::HourMinSecMSec,
+                    HOUR_MIN_SEC | _ => TimeFormat::HourMinSec,
                 }
             }
         }
@@ -242,28 +259,43 @@ impl Display for TimeFormat {
             TimeFormat::HourMinSecMSec => "HourMinSecMSec",
         };
 
-        write!(f, "{}", format)
+        write!(f, "{format}")
     }
+}
+
+impl OpMode {
+    pub const CLOCK: i8 = 0;
+    pub const COUNT_UP_TIMER: i8 = 1;
+    pub const COUNT_DOWN_TIMER: i8 = 2;
+    pub const MAX: i8 = Self::COUNT_DOWN_TIMER;
 }
 
 macro_rules! op_mode_impl_from {
     ($type:ty) => {
         impl From<OpMode> for $type {
             fn from(element: OpMode) -> Self {
+                const CLOCK: $type = OpMode::CLOCK as $type;
+                const COUNT_UP_TIMER: $type = OpMode::COUNT_UP_TIMER as $type;
+                const COUNT_DOWN_TIMER: $type = OpMode::COUNT_DOWN_TIMER as $type;
+
                 match element {
-                    OpMode::Clock => 0,
-                    OpMode::CountUpTimer => 1,
-                    OpMode::CountDownTimer(_) => 2,
+                    OpMode::Clock => CLOCK,
+                    OpMode::CountUpTimer => COUNT_UP_TIMER,
+                    OpMode::CountDownTimer(_) => COUNT_DOWN_TIMER,
                 }
             }
         }
 
         impl From<$type> for OpMode {
             fn from(val: $type) -> Self {
+                const CLOCK: $type = OpMode::CLOCK as $type;
+                const COUNT_UP_TIMER: $type = OpMode::COUNT_UP_TIMER as $type;
+                const COUNT_DOWN_TIMER: $type = OpMode::COUNT_DOWN_TIMER as $type;
+
                 match val {
-                    1 => OpMode::CountUpTimer,
-                    2 => OpMode::CountDownTimer(Duration::new(0, 0)),
-                    _ => OpMode::Clock,
+                    COUNT_UP_TIMER => OpMode::CountUpTimer,
+                    COUNT_DOWN_TIMER => OpMode::CountDownTimer(Duration::new(0, 0)),
+                    CLOCK | _ => OpMode::Clock,
                 }
             }
         }
@@ -285,6 +317,6 @@ impl Display for OpMode {
             OpMode::CountUpTimer => "CountUpTimer",
         };
 
-        write!(f, "{}", format)
+        write!(f, "{format}")
     }
 }

@@ -9,28 +9,51 @@ pub enum Position {
     Center,
     Top,
     Bottom,
-    Right,
     Left,
-    TopRight,
+    Right,
     TopLeft,
-    BottomRight,
+    TopRight,
     BottomLeft,
+    BottomRight,
+}
+
+impl Position {
+    pub const CENTER: i8 = 0;
+    pub const TOP: i8 = 1;
+    pub const BOTTOM: i8 = 2;
+    pub const LEFT: i8 = 3;
+    pub const RIGHT: i8 = 4;
+    pub const TOP_LEFT: i8 = 5;
+    pub const TOP_RIGHT: i8 = 6;
+    pub const BOTTOM_LEFT: i8 = 7;
+    pub const BOTTOM_RIGHT: i8 = 8;
+    pub const MAX: i8 = Self::BOTTOM_RIGHT;
 }
 
 macro_rules! position_impl_from {
     ($type:ty) => {
         impl From<$type> for Position {
             fn from(val: $type) -> Self {
+                const CENTER: $type = Position::CENTER as $type;
+                const TOP: $type = Position::TOP as $type;
+                const BOTTOM: $type = Position::BOTTOM as $type;
+                const LEFT: $type = Position::LEFT as $type;
+                const RIGHT: $type = Position::RIGHT as $type;
+                const TOP_LEFT: $type = Position::TOP_LEFT as $type;
+                const TOP_RIGHT: $type = Position::TOP_RIGHT as $type;
+                const BOTTOM_LEFT: $type = Position::BOTTOM_LEFT as $type;
+                const BOTTOM_RIGHT: $type = Position::BOTTOM_RIGHT as $type;
+
                 match val {
-                    0 => Self::TopLeft,
-                    1 => Self::Top,
-                    2 => Self::TopRight,
-                    3 => Self::Left,
-                    4 => Self::Center,
-                    5 => Self::Right,
-                    6 => Self::BottomLeft,
-                    7 => Self::Bottom,
-                    8 => Self::BottomRight,
+                    CENTER => Self::Center,
+                    TOP => Self::Top,
+                    BOTTOM => Self::Bottom,
+                    LEFT => Self::Left,
+                    RIGHT => Self::Right,
+                    TOP_LEFT => Self::TopLeft,
+                    TOP_RIGHT => Self::TopRight,
+                    BOTTOM_LEFT => Self::BottomLeft,
+                    BOTTOM_RIGHT => Self::BottomRight,
                     _ => Self::Center,
                 }
             }
@@ -38,16 +61,26 @@ macro_rules! position_impl_from {
 
         impl From<Position> for $type {
             fn from(element: Position) -> Self {
+                const CENTER: $type = Position::CENTER as $type;
+                const TOP: $type = Position::TOP as $type;
+                const BOTTOM: $type = Position::BOTTOM as $type;
+                const LEFT: $type = Position::LEFT as $type;
+                const RIGHT: $type = Position::RIGHT as $type;
+                const TOP_LEFT: $type = Position::TOP_LEFT as $type;
+                const TOP_RIGHT: $type = Position::TOP_RIGHT as $type;
+                const BOTTOM_LEFT: $type = Position::BOTTOM_LEFT as $type;
+                const BOTTOM_RIGHT: $type = Position::BOTTOM_RIGHT as $type;
+
                 match element {
-                    Position::TopLeft => 0,
-                    Position::Top => 1,
-                    Position::TopRight => 2,
-                    Position::Left => 3,
-                    Position::Center => 4,
-                    Position::Right => 5,
-                    Position::BottomLeft => 6,
-                    Position::Bottom => 7,
-                    Position::BottomRight => 8,
+                    Position::Center => CENTER.into(),
+                    Position::Top => TOP,
+                    Position::Bottom => BOTTOM,
+                    Position::Left => LEFT,
+                    Position::Right => RIGHT,
+                    Position::TopLeft => TOP_LEFT,
+                    Position::TopRight => TOP_RIGHT,
+                    Position::BottomLeft => BOTTOM_LEFT,
+                    Position::BottomRight => BOTTOM_RIGHT,
                 }
             }
         }
@@ -75,6 +108,6 @@ impl Display for Position {
             Self::BottomLeft => "BottomLeft",
         };
 
-        write!(f, "\"{}\"", position)
+        write!(f, "\"{position}\"")
     }
 }
