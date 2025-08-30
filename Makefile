@@ -47,6 +47,9 @@ build-docker: clippy-docker
 	@TAG=linux CMD="cargo build" make docker-exec
 	@TAG=windows CMD="cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
 
+generate-sbom-docker:
+	@TAG=linux CMD="make generate-sbom" make docker-exec
+
 docker-exec:
 	$(DOCKER) run --rm -it \
 		-v $(shell pwd):/app \
