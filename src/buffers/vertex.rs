@@ -5,10 +5,10 @@ use crate::utils::crop;
 use std::mem::size_of;
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vertex {
-    position: [f32; 3],
-    color: [f32; 4],
+    position: glm::Vec3,
+    color: glm::Vec4,
 }
 
 impl Vertex {
@@ -17,7 +17,10 @@ impl Vertex {
     /// Create a new instance of Vertex
     #[inline]
     pub const fn new(position: [f32; 3], color: [f32; 4]) -> Self {
-        Self { position, color }
+        Self {
+            position: glm::vec3(position[0], position[1], position[2]),
+            color: glm::vec4(color[0], color[1], color[2], color[3]),
+        }
     }
 
     /// Create a Vertex of rectangle with the specifications below.

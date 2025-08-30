@@ -21,7 +21,8 @@ fetch:
 	$(CARGO) fetch
 
 update:
-	$(CARGO) update
+	$(CARGO) update --verbose
+	@make fetch
 
 clippy:
 	$(CARGO) clippy --all-targets

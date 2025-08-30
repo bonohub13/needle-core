@@ -5,11 +5,11 @@ edition = "2021"
 license = "GPL-2.0-or-later"
 
 [dependencies]
-bytemuck = "1.20"
 chrono = "0.4"
 dialog = "0.3"
 directories = "6.0"
 font-loader = "0.11"
+glm = "0.3.0"
 glyphon = "0.9"
 imgui = "0.12"
 imgui-wgpu = "0.25"
