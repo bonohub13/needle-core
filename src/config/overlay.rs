@@ -8,9 +8,9 @@ use std::fmt::{self, Display, Formatter};
 #[derive(Debug, Clone, Deserialize)]
 pub struct Overlay {
     /// Path of vertex shader
-    pub vertex_shader: Option<String>,
+    pub vertex_shader: String,
     /// Path of fragment shader
-    pub fragment_shader: Option<String>,
+    pub fragment_shader: String,
 }
 
 impl Overlay {
@@ -21,16 +21,16 @@ impl Overlay {
         vertex_label: NeedleLabel<'label>,
         fragment_label: NeedleLabel<'label>,
     ) -> NeedleErr<Option<ShaderDescriptor<'label>>> {
-        if let (Some(vertex_shader), Some(fragment_shader)) =
-            (&self.vertex_shader, &self.fragment_shader)
-        {
+        if self.vertex_shader.is_empty() || self.fragment_shader.is_empty() {
+            Ok(None)
+        } else {
             let vertex = NeedleConfig::config_path(
                 false,
-                Some(&format!("{}/{}", Self::SHADER_BASE, vertex_shader)),
+                Some(&format!("{}/{}", Self::SHADER_BASE, self.vertex_shader)),
             )?;
             let fragment = NeedleConfig::config_path(
                 false,
-                Some(&format!("{}/{}", Self::SHADER_BASE, fragment_shader)),
+                Some(&format!("{}/{}", Self::SHADER_BASE, self.fragment_shader)),
             )?;
 
             Ok(Some(ShaderDescriptor {
@@ -39,8 +39,6 @@ impl Overlay {
                 fragment,
                 fragment_label,
             }))
-        } else {
-            Ok(None)
         }
     }
 }
@@ -51,19 +49,11 @@ impl Display for Overlay {
             f,
             "# Vertex Shader Path : <default config shader path>/vertex_shader.spv"
         )?;
-        writeln!(
-            f,
-            "vertex_shader = {}",
-            self.vertex_shader.clone().unwrap_or_default(),
-        )?;
+        writeln!(f, "vertex_shader = {}", self.vertex_shader,)?;
         writeln!(
             f,
             "# Fragment Shader Path : <default config shader path>/fragment_shader.spv"
         )?;
-        writeln!(
-            f,
-            "fragment_shader = {}",
-            self.fragment_shader.clone().unwrap_or_default(),
-        )
+        writeln!(f, "fragment_shader = {}", self.fragment_shader,)
     }
 }
