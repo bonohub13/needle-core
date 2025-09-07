@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 mod fps;
+mod overlay;
 mod position;
 mod text;
 mod time;
 
 pub use fps::*;
+pub use overlay::*;
 pub use position::*;
 pub use text::*;
 pub use time::*;
@@ -29,6 +31,8 @@ use std::{
 pub struct NeedleConfig {
     /// Background color (RGBA)
     pub background_color: [f32; 4],
+    /// Overlay config
+    pub overlay: Overlay,
     /// Time text config
     pub time: TimeConfig,
     /// FPS text config
@@ -220,6 +224,10 @@ impl Default for NeedleConfig {
     fn default() -> Self {
         Self {
             background_color: [0.0, 0.0, 0.0, 1.0],
+            overlay: Overlay {
+                vertex_shader: None,
+                fragment_shader: None,
+            },
             time: TimeConfig {
                 format: TimeFormat::HourMinSec,
                 font: None,
@@ -254,6 +262,8 @@ impl Display for NeedleConfig {
             self.background_color[2],
             self.background_color[3]
         )?;
+        writeln!(f, "{}[overlay]", Self::NEWLINE)?;
+        writeln!(f, "{}", self.overlay)?;
         writeln!(f, "{}[time]", Self::NEWLINE)?;
         writeln!(f, "{}", self.time)?;
         writeln!(f, "{}[fps]", Self::NEWLINE)?;
