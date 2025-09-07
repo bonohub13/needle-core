@@ -10,19 +10,22 @@ use std::{
 use wgpu::{Queue, RenderPass, RenderPipeline};
 use winit::dpi::PhysicalSize;
 
-#[derive(Debug)]
-pub struct ShaderRenderer {
-    buffer: Buffer,
-    ubo: Option<Ubo>,
-    pipeline: RenderPipeline,
+#[derive(Debug, Clone)]
+pub struct ShaderDescriptor<'a> {
+    /// Path to vertex shader
+    pub vertex: PathBuf,
+    /// Label for vertex shader
+    pub vertex_label: NeedleLabel<'a>,
+    /// Path to fragment shader
+    pub fragment: PathBuf,
+    /// Label for fragment shader
+    pub fragment_label: NeedleLabel<'a>,
 }
 
 #[derive(Debug)]
 pub struct ShaderRendererDescriptor<'desc> {
-    /// Path to vertex shader
-    pub vert_shader_path: PathBuf,
-    /// Path to fragment shader
-    pub frag_shader_path: PathBuf,
+    /// Shader Descriptor
+    pub shader_desc: ShaderDescriptor<'desc>,
     /// Buffer
     pub buffer: Buffer,
     /// UBO
@@ -37,6 +40,67 @@ pub struct ShaderRendererDescriptor<'desc> {
     pub label: Option<&'desc str>,
 }
 
+#[derive(Debug, Clone)]
+pub struct Shader {
+    vertex: wgpu::ShaderModule,
+    fragment: wgpu::ShaderModule,
+}
+
+impl Shader {
+    pub fn new(state: &State, desc: &ShaderDescriptor) -> NeedleErr<Self> {
+        let vert_shader_code = Self::read_shader(&desc.vertex)?;
+        let frag_shader_code = Self::read_shader(&desc.fragment)?;
+        let vertex = unsafe {
+            state.device().create_shader_module_passthrough(
+                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
+                    label: Some(&desc.vertex_label.to_string()),
+                    source: wgpu::util::make_spirv_raw(&vert_shader_code),
+                }),
+            )
+        };
+        let fragment = unsafe {
+            state.device().create_shader_module_passthrough(
+                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
+                    label: Some(&desc.fragment_label.to_string()),
+                    source: wgpu::util::make_spirv_raw(&frag_shader_code),
+                }),
+            )
+        };
+
+        Ok(Self { vertex, fragment })
+    }
+
+    fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
+        const BYTE_ALIGNMENT: usize = 4; // Check and enforce 4byte alignment
+
+        let mut reader = match OpenOptions::new().read(true).open(path) {
+            Ok(file) => Ok(file),
+            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
+        }?;
+        let mut buffer = vec![];
+
+        match reader.read_to_end(&mut buffer) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
+        }?;
+        if buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
+            // Append 0 to buffer to force 4byte alignment
+            buffer.extend(std::iter::repeat_n(0, buffer.len() % BYTE_ALIGNMENT));
+        }
+
+        let buffer = Box::from_iter(buffer);
+
+        Ok(buffer)
+    }
+}
+
+#[derive(Debug)]
+pub struct ShaderRenderer {
+    buffer: Buffer,
+    ubo: Option<Ubo>,
+    pipeline: RenderPipeline,
+}
+
 impl ShaderRenderer {
     /// Creates new instance of ShaderRenderer
     /// Vertex buffer must be passed, however index buffer is optional.
@@ -45,24 +109,6 @@ impl ShaderRenderer {
         let label = match desc.label {
             Some(label) => label.to_string(),
             None => "Render".to_string(),
-        };
-        let vert_shader_code = Self::read_shader(&desc.vert_shader_path)?;
-        let frag_shader_code = Self::read_shader(&desc.frag_shader_path)?;
-        let vert_shader = unsafe {
-            state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
-                    label: Some(&NeedleLabel::Shader("Vertex").to_string()),
-                    source: wgpu::util::make_spirv_raw(&vert_shader_code),
-                }),
-            )
-        };
-        let frag_shader = unsafe {
-            state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
-                    label: Some(&NeedleLabel::Shader("Fragment").to_string()),
-                    source: wgpu::util::make_spirv_raw(&frag_shader_code),
-                }),
-            )
         };
         let bind_group_layouts = desc
             .bind_group_layouts
@@ -77,6 +123,7 @@ impl ShaderRenderer {
                     bind_group_layouts: &bind_group_layouts,
                     push_constant_ranges: &[],
                 });
+        let shader = Shader::new(state, &desc.shader_desc)?;
         let render_pipeline =
             state
                 .device()
@@ -84,13 +131,13 @@ impl ShaderRenderer {
                     label: Some(&NeedleLabel::Pipeline(&label).to_string()),
                     layout: Some(&render_pipeline_layout),
                     vertex: wgpu::VertexState {
-                        module: &vert_shader,
+                        module: &shader.vertex,
                         entry_point: Some("main"),
                         buffers: std::slice::from_ref(&desc.vertex_buffer_layout),
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                     },
                     fragment: Some(wgpu::FragmentState {
-                        module: &frag_shader,
+                        module: &shader.fragment,
                         entry_point: Some("main"),
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                         targets: &[Some(wgpu::ColorTargetState {
@@ -148,29 +195,6 @@ impl ShaderRenderer {
         }
 
         Ok(())
-    }
-
-    fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
-        const BYTE_ALIGNMENT: usize = 4; // Check and enforce 4byte alignment
-
-        let mut reader = match OpenOptions::new().read(true).open(path) {
-            Ok(file) => Ok(file),
-            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
-        }?;
-        let mut buffer = vec![];
-
-        match reader.read_to_end(&mut buffer) {
-            Ok(_) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
-        }?;
-        if buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
-            // Append 0 to buffer to force 4byte alignment
-            buffer.extend(std::iter::repeat_n(0, buffer.len() % BYTE_ALIGNMENT));
-        }
-
-        let buffer = Box::from_iter(buffer);
-
-        Ok(buffer)
     }
 }
 
