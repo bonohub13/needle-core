@@ -29,7 +29,10 @@ impl Vertex {
     /// - depth: z axis offset
     /// - color: RGBA for all vertex
     pub fn rectangle(size: [f32; 2], offset: [f32; 2], depth: f32, color: &[f32; 4]) -> [Self; 6] {
-        let (min_x, min_y) = (crop(offset[0], 2.0) - 1.0, crop(offset[1], 1.0) - 1.0);
+        let (min_x, min_y) = (
+            crop(offset[0], 2.0) - size[0],
+            crop(offset[1], 2.0) - size[1],
+        );
 
         [
             Vertex::new([min_x, min_y, depth], *color), // Bottom left
@@ -49,7 +52,10 @@ impl Vertex {
         depth: f32,
         color: &[f32; 4],
     ) -> ([Self; 4], [u16; 6]) {
-        let (min_x, min_y) = (crop(offset[0], 2.0) - 1.0, crop(offset[1], 2.0) - 1.0);
+        let (min_x, min_y) = (
+            crop(offset[0], 2.0) - size[0],
+            crop(offset[1], 2.0) - size[1],
+        );
         let vertices = [
             Vertex::new([min_x, min_y, depth], *color), // Bottom left
             Vertex::new([size[0], min_y, depth], *color), // Bottom Right
@@ -67,8 +73,8 @@ impl Vertex {
              * Top right
              */
             [
-                0, 3, 1, // Upper left triangle
-                1, 3, 2, // Lower right triangle
+                0, 3, 1, // Lower left triangle
+                1, 3, 2, // Upper right triangle
             ];
 
         (vertices, indices)
