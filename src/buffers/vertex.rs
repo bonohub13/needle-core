@@ -29,18 +29,19 @@ impl Vertex {
     /// - depth: z axis offset
     /// - color: RGBA for all vertex
     pub fn rectangle(size: [f32; 2], offset: [f32; 2], depth: f32, color: &[f32; 4]) -> [Self; 6] {
-        let (min_x, min_y) = (
+        let min = [
             crop(offset[0], 2.0) - size[0],
             crop(offset[1], 2.0) - size[1],
-        );
+        ];
+        let max = [size[0] + offset[0], size[1] + offset[1]];
 
         [
-            Vertex::new([min_x, min_y, depth], *color), // Bottom left
-            Vertex::new([min_x, size[1], depth], *color), // Top left
-            Vertex::new([size[0], min_y, depth], *color), // Bottom Right
-            Vertex::new([size[0], min_y, depth], *color), // Bottom Right
-            Vertex::new([min_x, size[1], depth], *color), // Top left
-            Vertex::new([size[0], size[1], depth], *color), // Top right
+            Vertex::new([min[0], min[1], depth], *color), // Bottom left
+            Vertex::new([min[0], max[1], depth], *color), // Top left
+            Vertex::new([max[0], min[1], depth], *color), // Bottom Right
+            Vertex::new([max[0], min[1], depth], *color), // Bottom Right
+            Vertex::new([min[0], max[1], depth], *color), // Top left
+            Vertex::new([max[0], max[1], depth], *color), // Top right
         ]
     }
 
@@ -52,15 +53,16 @@ impl Vertex {
         depth: f32,
         color: &[f32; 4],
     ) -> ([Self; 4], [u16; 6]) {
-        let (min_x, min_y) = (
+        let min = [
             crop(offset[0], 2.0) - size[0],
             crop(offset[1], 2.0) - size[1],
-        );
+        ];
+        let max = [size[0] + offset[0], size[1] + offset[1]];
         let vertices = [
-            Vertex::new([min_x, min_y, depth], *color), // Bottom left
-            Vertex::new([size[0], min_y, depth], *color), // Bottom Right
-            Vertex::new([size[0], size[1], depth], *color), // Top right
-            Vertex::new([min_x, size[1], depth], *color), // Top left
+            Vertex::new([min[0], min[1], depth], *color), // Bottom left
+            Vertex::new([max[0], min[1], depth], *color), // Bottom Right
+            Vertex::new([max[0], max[1], depth], *color), // Top right
+            Vertex::new([min[0], max[1], depth], *color), // Top left
         ];
         let indices =
             /* Order to draw
