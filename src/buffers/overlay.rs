@@ -36,6 +36,21 @@ impl OverlayInfo {
     }
 
     #[inline]
+    pub const fn top_left(&self) -> &glm::Vec2 {
+        &self.top_left
+    }
+
+    #[inline]
+    pub const fn size(&self) -> &glm::Vec2 {
+        &self.size
+    }
+
+    #[inline]
+    pub const fn color(&self) -> &glm::Vec4 {
+        &self.color
+    }
+
+    #[inline]
     pub const fn set_top_left(&mut self, top_left: [f32; 2]) {
         self.top_left = glm::vec2(
             top_left[0].min(Self::COORD_MAX.x).max(Self::COORD_MIN.x),

@@ -14,7 +14,7 @@ impl Vertex {
     const VERTEX_ATTR: [wgpu::VertexAttribute; 2] =
         wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x4];
     const VERTEX_COORD_MAX: glm::Vec2 = glm::vec2(2.0, 2.0);
-    const VERTEX_COORD_MIN: glm::Vec2 = glm::vec2(0.0, 0.0);
+    const VERTEX_COORD_MIN: glm::Vec2 = glm::vec2(-1.0, -1.0);
 
     /// Create a new instance of Vertex
     #[inline]

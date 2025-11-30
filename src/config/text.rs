@@ -54,6 +54,7 @@ impl Text {
 
                 (right.0, bottom.1)
             }
+            Position::Coordinate { x, y } => (x, y),
         }
     }
 

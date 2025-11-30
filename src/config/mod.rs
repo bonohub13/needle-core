@@ -32,7 +32,7 @@ pub struct NeedleConfig {
     /// Background color (RGBA)
     pub background_color: [f32; 4],
     /// Overlay config
-    pub overlay: Option<Overlay>,
+    pub overlays: Option<Vec<Overlay>>,
     /// Time text config
     pub time: TimeConfig,
     /// FPS text config
@@ -44,6 +44,7 @@ impl<'a> NeedleConfig {
     const NEWLINE: &'a str = "\r\n";
     #[cfg(not(windows))]
     const NEWLINE: &'a str = "\n";
+    const INDENT: &'a str = "    ";
     const CONFIG_FILE: &'a str = "config.toml";
 
     /// Output config to a file/stdout.
@@ -224,7 +225,7 @@ impl Default for NeedleConfig {
     fn default() -> Self {
         Self {
             background_color: [0.0, 0.0, 0.0, 1.0],
-            overlay: None,
+            overlays: None,
             time: TimeConfig {
                 format: TimeFormat::HourMinSec,
                 font: None,
@@ -259,9 +260,14 @@ impl Display for NeedleConfig {
             self.background_color[2],
             self.background_color[3]
         )?;
-        if let Some(overlay) = &self.overlay {
-            writeln!(f, "{}[overlay]", Self::NEWLINE)?;
-            writeln!(f, "{}", overlay)?;
+        if let Some(overlays) = &self.overlays {
+            writeln!(f, "overlays = {{")?;
+            for overlay in overlays {
+                writeln!(f, "{}{{", Self::INDENT)?;
+                writeln!(f, "{}{}", Self::INDENT.repeat(2), overlay)?;
+                writeln!(f, "{}}},", Self::INDENT)?;
+            }
+            writeln!(f, "}}")?;
         }
         writeln!(f, "{}[time]", Self::NEWLINE)?;
         writeln!(f, "{}", self.time)?;

@@ -1,7 +1,7 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-use crate::{NeedleConfig, NeedleErr, NeedleLabel, ShaderDescriptor};
+use crate::{NeedleConfig, NeedleErr, NeedleLabel, OverlayInfo, ShaderDescriptor};
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
@@ -11,6 +11,12 @@ pub struct Overlay {
     pub vertex_shader: String,
     /// Path of fragment shader
     pub fragment_shader: String,
+    /// Position: [x, y]
+    pub position: [f32; 2],
+    /// Size: [x, y]
+    pub size: [f32; 2],
+    /// Color: [r, g, b, a]
+    pub color: [f32; 4],
 }
 
 impl Overlay {
@@ -41,6 +47,11 @@ impl Overlay {
             }))
         }
     }
+
+    #[inline]
+    pub const fn info(&self) -> OverlayInfo {
+        OverlayInfo::new(self.position, self.size, self.color)
+    }
 }
 
 impl Display for Overlay {
@@ -54,6 +65,20 @@ impl Display for Overlay {
             f,
             "# Fragment Shader Path : <default config shader path>/fragment_shader.spv"
         )?;
-        writeln!(f, "fragment_shader = {}", self.fragment_shader,)
+        writeln!(f, "fragment_shader = {}", self.fragment_shader,)?;
+        writeln!(f, "# Position: [x, y]")?;
+        writeln!(
+            f,
+            "position = {{{}, {}}}",
+            self.position[0], self.position[1]
+        )?;
+        writeln!(f, "# Size: [x, y]")?;
+        writeln!(f, "size = {{{}, {}}}", self.size[0], self.size[1])?;
+        writeln!(f, "# Color: [r, g, b, a]")?;
+        writeln!(
+            f,
+            "Color = {{{}, {}, {}, {}}}",
+            self.color[0], self.color[1], self.color[2], self.color[3]
+        )
     }
 }

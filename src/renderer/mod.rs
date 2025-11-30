@@ -1,9 +1,11 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+mod overlay;
 mod shader;
 mod text;
 
+pub use overlay::*;
 pub use shader::*;
 pub use text::*;
 
