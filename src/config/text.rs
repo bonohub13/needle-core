@@ -5,7 +5,7 @@ use super::Position;
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct Text {
     /// Text visualization multiplier scale
     pub scale: f32,

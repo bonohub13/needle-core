@@ -5,8 +5,9 @@ use crate::{NeedleConfig, NeedleErr, NeedleLabel, OverlayInfo, ShaderDescriptor}
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Deserialize)]
 pub struct Overlay {
+    pub name: String,
     /// Path of vertex shader
     pub vertex_shader: String,
     /// Path of fragment shader
@@ -56,6 +57,8 @@ impl Overlay {
 
 impl Display for Overlay {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "# Overlay Name")?;
+        writeln!(f, "name = {}", self.name,)?;
         writeln!(
             f,
             "# Vertex Shader Path : <default config shader path>/vertex_shader.spv"

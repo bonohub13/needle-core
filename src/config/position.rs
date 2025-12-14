@@ -4,8 +4,9 @@
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Deserialize)]
 pub enum Position {
+    #[default]
     Center,
     Top,
     Bottom,
@@ -15,7 +16,10 @@ pub enum Position {
     TopRight,
     BottomLeft,
     BottomRight,
-    Coordinate { x: f32, y: f32 },
+    Coordinate {
+        x: f32,
+        y: f32,
+    },
 }
 
 impl Position {
