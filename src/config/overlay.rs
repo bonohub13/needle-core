@@ -57,30 +57,18 @@ impl Overlay {
 
 impl Display for Overlay {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "# Overlay Name")?;
-        writeln!(f, "name = {}", self.name,)?;
-        writeln!(
+        write!(f, "name = \"{}\", ", self.name,)?;
+        write!(f, "vertex_shader = \"{}\", ", self.vertex_shader,)?;
+        write!(f, "fragment_shader = \"{}\", ", self.fragment_shader,)?;
+        write!(
             f,
-            "# Vertex Shader Path : <default config shader path>/vertex_shader.spv"
-        )?;
-        writeln!(f, "vertex_shader = {}", self.vertex_shader,)?;
-        writeln!(
-            f,
-            "# Fragment Shader Path : <default config shader path>/fragment_shader.spv"
-        )?;
-        writeln!(f, "fragment_shader = {}", self.fragment_shader,)?;
-        writeln!(f, "# Position: [x, y]")?;
-        writeln!(
-            f,
-            "position = {{{}, {}}}",
+            "position = [{}, {}], ",
             self.position[0], self.position[1]
         )?;
-        writeln!(f, "# Size: [x, y]")?;
-        writeln!(f, "size = {{{}, {}}}", self.size[0], self.size[1])?;
-        writeln!(f, "# Color: [r, g, b, a]")?;
-        writeln!(
+        write!(f, "size = [{}, {}], ", self.size[0], self.size[1])?;
+        write!(
             f,
-            "Color = {{{}, {}, {}, {}}}",
+            "color = [{}, {}, {}, {}]",
             self.color[0], self.color[1], self.color[2], self.color[3]
         )
     }

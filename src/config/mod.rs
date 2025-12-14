@@ -261,13 +261,11 @@ impl Display for NeedleConfig {
             self.background_color[3]
         )?;
         if let Some(overlays) = &self.overlays {
-            writeln!(f, "overlays = {{")?;
+            writeln!(f, "overlays = [ ")?;
             for overlay in overlays {
-                writeln!(f, "{}{{", Self::INDENT)?;
-                writeln!(f, "{}{}", Self::INDENT.repeat(2), overlay)?;
-                writeln!(f, "{}}},", Self::INDENT)?;
+                writeln!(f, "{}{{ {} }}", Self::INDENT, overlay)?;
             }
-            writeln!(f, "}}")?;
+            writeln!(f, "]")?;
         }
         writeln!(f, "{}[time]", Self::NEWLINE)?;
         writeln!(f, "{}", self.time)?;
