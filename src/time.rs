@@ -51,7 +51,7 @@ impl Time {
     /// Get current operation mode of Time.
     #[inline]
     pub fn mode(&self) -> OpMode {
-        self.mode.clone()
+        self.mode
     }
 
     /// Set the operation mode of Time.
