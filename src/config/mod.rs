@@ -6,12 +6,14 @@ mod overlay;
 mod position;
 mod text;
 mod time;
+mod window;
 
 pub use fps::*;
 pub use overlay::*;
 pub use position::*;
 pub use text::*;
 pub use time::*;
+pub use window::*;
 
 use crate::{
     error::{NeedleErr, NeedleError},
@@ -31,6 +33,8 @@ use std::{
 pub struct NeedleConfig {
     /// Background color (RGBA)
     pub background_color: [f32; 4],
+    /// Window config
+    pub window: Option<Window>,
     /// Overlay config
     pub overlays: Option<Vec<Overlay>>,
     /// Time text config
@@ -226,6 +230,7 @@ impl Default for NeedleConfig {
         Self {
             background_color: [0.0, 0.0, 0.0, 1.0],
             overlays: None,
+            window: None,
             time: TimeConfig {
                 format: TimeFormat::HourMinSec,
                 font: None,
@@ -260,10 +265,14 @@ impl Display for NeedleConfig {
             self.background_color[2],
             self.background_color[3]
         )?;
+        if let Some(window) = &self.window {
+            writeln!(f, "{}[window]", Self::NEWLINE)?;
+            writeln!(f, "{}", window)?;
+        }
         if let Some(overlays) = &self.overlays {
             writeln!(f, "overlays = [ ")?;
             for overlay in overlays {
-                writeln!(f, "{}{{ {} }}", Self::INDENT, overlay)?;
+                writeln!(f, "{}{{ {} }},", Self::INDENT, overlay)?;
             }
             writeln!(f, "]")?;
         }
