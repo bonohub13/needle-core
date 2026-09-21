@@ -158,12 +158,18 @@ impl<'a> State<'a> {
     /// - Timeout
     /// - Outdated
     /// - Lost
-    /// - OutOfMemory
     /// - Other
     ///
     /// These errors are translated from `wgpu::SurfaceError` into `NeedleError`
     #[inline]
-    pub fn get_current_texture(&self) -> wgpu::CurrentSurfaceTexture {
-        self.surface.get_current_texture()
+    pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
+        match self.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(texture)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(texture) => Ok(texture),
+            wgpu::CurrentSurfaceTexture::Timeout => Err(NeedleError::Timeout),
+            wgpu::CurrentSurfaceTexture::Outdated => Err(NeedleError::Outdated),
+            wgpu::CurrentSurfaceTexture::Lost => Err(NeedleError::Lost),
+            _ => Err(NeedleError::Other),
+        }
     }
 }
