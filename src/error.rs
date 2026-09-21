@@ -37,6 +37,10 @@ pub enum NeedleError {
     #[error("NeedleConfig | Failed to create directory to path. ({0})")]
     FailedToCreateDirectory(Box<dyn StdError>),
 
+    // winit related errors
+    #[error("Window | Failed to fetch display handle")]
+    HasDisplayHandle,
+
     // Surface related errors
     #[error("Surface | Lost")]
     Lost,

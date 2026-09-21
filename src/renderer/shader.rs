@@ -52,18 +52,20 @@ impl Shader {
         let frag_shader_code = Self::read_shader(&desc.fragment)?;
         let vertex = unsafe {
             state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
-                    label: Some(&desc.vertex_label.to_string()),
-                    source: wgpu::util::make_spirv_raw(&vert_shader_code),
-                }),
+                wgpu::ShaderModuleDescriptorPassthrough {
+                    label: Some(desc.vertex_label.to_string().as_str()),
+                    spirv: Some(wgpu::util::make_spirv_raw(&vert_shader_code)),
+                    ..Default::default()
+                },
             )
         };
         let fragment = unsafe {
             state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough::SpirV(wgpu::ShaderModuleDescriptorSpirV {
-                    label: Some(&desc.fragment_label.to_string()),
-                    source: wgpu::util::make_spirv_raw(&frag_shader_code),
-                }),
+                wgpu::ShaderModuleDescriptorPassthrough {
+                    label: Some(desc.fragment_label.to_string().as_str()),
+                    spirv: Some(wgpu::util::make_spirv_raw(&frag_shader_code)),
+                    ..Default::default()
+                },
             )
         };
 
@@ -113,7 +115,7 @@ impl ShaderRenderer {
         let bind_group_layouts = desc
             .bind_group_layouts
             .iter()
-            .map(|layout| layout.layout())
+            .map(|layout| Some(layout.layout()))
             .collect::<Vec<_>>();
         let render_pipeline_layout =
             state
@@ -121,7 +123,7 @@ impl ShaderRenderer {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some(&NeedleLabel::PipelineLayout(&label).to_string()),
                     bind_group_layouts: &bind_group_layouts,
-                    push_constant_ranges: &[],
+                    ..Default::default()
                 });
         let shader = Shader::new(state, &desc.shader_desc)?;
         let render_pipeline =
@@ -133,7 +135,7 @@ impl ShaderRenderer {
                     vertex: wgpu::VertexState {
                         module: &shader.vertex,
                         entry_point: Some("main"),
-                        buffers: std::slice::from_ref(&desc.vertex_buffer_layout),
+                        buffers: std::slice::from_ref(&Some(desc.vertex_buffer_layout.clone())),
                         compilation_options: wgpu::PipelineCompilationOptions::default(),
                     },
                     fragment: Some(wgpu::FragmentState {
@@ -161,7 +163,7 @@ impl ShaderRenderer {
                         mask: !0,
                         alpha_to_coverage_enabled: false,
                     },
-                    multiview: None,
+                    multiview_mask: None,
                     cache: None,
                 });
 

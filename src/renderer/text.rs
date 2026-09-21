@@ -61,7 +61,7 @@ impl TextRenderer {
         let font_size = glm::vec2(desc.font_size.width as f32, desc.font_size.height as f32)
             * desc.scale_factor;
 
-        buffer.set_size(&mut system, Some(font_size.x), Some(font_size.y));
+        buffer.set_size(Some(font_size.x), Some(font_size.y));
         buffer.shape_until_scroll(&mut system, false);
 
         Ok(Self {
@@ -113,10 +113,10 @@ impl TextRenderer {
     /// Update text to render.
     pub fn set_text(&mut self, text: &str) {
         self.buffer.set_text(
-            &mut self.system,
             text,
             &glyphon::Attrs::new().family(glyphon::Family::Monospace),
             glyphon::Shaping::Advanced,
+            None,
         )
     }
 

@@ -42,7 +42,7 @@ impl Texture {
             address_mode_w: wgpu::AddressMode::ClampToEdge,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             compare: Some(wgpu::CompareFunction::LessEqual),
             lod_min_clamp: 0.0,
             lod_max_clamp: 100.0,
@@ -61,8 +61,8 @@ impl Texture {
     pub fn default_depth_stencil() -> wgpu::DepthStencilState {
         wgpu::DepthStencilState {
             format: Texture::DEPTH_FORMAT,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_write_enabled: Some(true),
+            depth_compare: Some(wgpu::CompareFunction::Less),
             stencil: wgpu::StencilState::default(),
             bias: wgpu::DepthBiasState::default(),
         }
