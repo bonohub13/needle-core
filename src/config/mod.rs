@@ -133,8 +133,11 @@ impl<'a> NeedleConfig {
     /// Returns path for config file.
     /// Returned path is a relative path from default config path.
     /// If path does not exist, it creates a new directory recursively.
-    pub fn config_path(create_dir: bool, relative_path: Option<&str>) -> NeedleErr<PathBuf> {
-        let mut config_path: PathBuf;
+    pub fn config_path(
+        create_dir: bool,
+        is_file: bool,
+        relative_path: Option<&str>,
+    ) -> NeedleErr<PathBuf> {
         let relative_path = match relative_path {
             Some(path) => Ok(path.split("/").collect::<Vec<_>>()),
             None => Err(NeedleError::InvalidPath),
@@ -142,31 +145,30 @@ impl<'a> NeedleConfig {
 
         match ProjectDirs::from("com", "bonohub13", "needle") {
             Some(app_dir) => {
-                if (!app_dir.config_dir().exists()) && create_dir {
-                    match fs::create_dir_all(app_dir.config_dir()) {
+                let config_dir = app_dir.config_dir().join(
+                    if is_file {
+                        &relative_path[..relative_path.len() - 1]
+                    } else {
+                        &relative_path
+                    }
+                    .join("/"),
+                );
+
+                if (!config_dir.exists()) && create_dir {
+                    match fs::create_dir_all(config_dir) {
                         Ok(_) => Ok(()),
                         Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
                     }?;
                 }
 
-                config_path = app_dir.config_dir().to_path_buf();
+                Ok(if is_file {
+                    config_dir.join(relative_path[relative_path.len() - 1])
+                } else {
+                    config_dir
+                })
             }
             None => return Err(NeedleError::InvalidPath),
         }
-
-        for rpath in relative_path {
-            match rpath {
-                "." | "" | " " | "\t" => (),
-                ".." => {
-                    if !config_path.pop() {
-                        return Err(NeedleError::InvalidPath);
-                    }
-                }
-                _ => config_path.push(rpath),
-            }
-        }
-
-        Ok(config_path)
     }
 
     /// Saves the current configuration to the default config path.
@@ -190,7 +192,7 @@ impl<'a> NeedleConfig {
     }
 
     fn config_file(create_dir: bool) -> NeedleErr<PathBuf> {
-        Self::config_path(create_dir, Some(Self::CONFIG_FILE))
+        Self::config_path(create_dir, true, Some(Self::CONFIG_FILE))
     }
 
     fn write(file: &Path) -> NeedleErr<()> {
