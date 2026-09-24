@@ -4,8 +4,9 @@
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Deserialize)]
 pub enum Position {
+    #[default]
     Center,
     Top,
     Bottom,
@@ -15,6 +16,10 @@ pub enum Position {
     TopRight,
     BottomLeft,
     BottomRight,
+    Coordinate {
+        x: f32,
+        y: f32,
+    },
 }
 
 impl Position {
@@ -81,6 +86,7 @@ macro_rules! position_impl_from {
                     Position::TopRight => TOP_RIGHT,
                     Position::BottomLeft => BOTTOM_LEFT,
                     Position::BottomRight => BOTTOM_RIGHT,
+                    _ => CENTER.into(),
                 }
             }
         }
@@ -106,6 +112,7 @@ impl Display for Position {
             Self::TopLeft => "TopLeft",
             Self::BottomRight => "BottomRight",
             Self::BottomLeft => "BottomLeft",
+            Self::Coordinate { x, y } => &format!("Coordinate = {{x: \"{x}\", y: \"{y}\"}}"),
         };
 
         write!(f, "\"{position}\"")

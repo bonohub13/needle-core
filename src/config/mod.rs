@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 mod fps;
+mod overlay;
 mod position;
 mod text;
 mod time;
+mod window;
 
 pub use fps::*;
+pub use overlay::*;
 pub use position::*;
 pub use text::*;
 pub use time::*;
+pub use window::*;
 
 use crate::{
     error::{NeedleErr, NeedleError},
@@ -29,6 +33,10 @@ use std::{
 pub struct NeedleConfig {
     /// Background color (RGBA)
     pub background_color: [f32; 4],
+    /// Window config
+    pub window: Option<Window>,
+    /// Overlay config
+    pub overlays: Option<Vec<Overlay>>,
     /// Time text config
     pub time: TimeConfig,
     /// FPS text config
@@ -40,6 +48,7 @@ impl<'a> NeedleConfig {
     const NEWLINE: &'a str = "\r\n";
     #[cfg(not(windows))]
     const NEWLINE: &'a str = "\n";
+    const INDENT: &'a str = "    ";
     const CONFIG_FILE: &'a str = "config.toml";
 
     /// Output config to a file/stdout.
@@ -124,37 +133,50 @@ impl<'a> NeedleConfig {
     /// Returns path for config file.
     /// Returned path is a relative path from default config path.
     /// If path does not exist, it creates a new directory recursively.
-    pub fn config_path(create_dir: bool, relative_path: Option<&str>) -> NeedleErr<PathBuf> {
-        let mut config_path: PathBuf;
+    pub fn config_path(
+        create_dir: bool,
+        is_file: bool,
+        relative_path: Option<&str>,
+    ) -> NeedleErr<PathBuf> {
         let relative_path = match relative_path {
-            Some(path) => Ok(path.split("/").collect::<Vec<_>>()),
-            None => Err(NeedleError::InvalidPath),
-        }?;
+            Some(path) => path.split("/").collect::<Vec<_>>(),
+            None => vec![],
+        };
 
         match ProjectDirs::from("com", "bonohub13", "needle") {
             Some(app_dir) => {
-                if create_dir {
-                    Self::create_dir(app_dir.config_dir())?
-                }
-
-                config_path = app_dir.config_dir().to_path_buf();
-            }
-            None => return Err(NeedleError::InvalidPath),
-        }
-
-        for rpath in relative_path {
-            match rpath {
-                "." | "" | " " | "\t" => (),
-                ".." => {
-                    if !config_path.pop() {
-                        return Err(NeedleError::InvalidPath);
+                let relative_path_index = if is_file {
+                    if relative_path.len() <= 1 {
+                        0
+                    } else {
+                        relative_path.len() - 1
                     }
-                }
-                _ => config_path.push(rpath),
-            }
-        }
+                } else {
+                    relative_path.len()
+                };
+                let config_path = if relative_path_index == 0 {
+                    app_dir.config_dir().to_path_buf()
+                } else {
+                    app_dir
+                        .config_dir()
+                        .join(relative_path[..relative_path_index].join("/"))
+                };
 
-        Ok(config_path)
+                if (!config_path.exists()) && create_dir {
+                    match fs::create_dir_all(&config_path) {
+                        Ok(_) => Ok(()),
+                        Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
+                    }?;
+                }
+
+                Ok(if !is_file || relative_path.is_empty() {
+                    config_path
+                } else {
+                    config_path.join(relative_path[relative_path_index])
+                })
+            }
+            None => Err(NeedleError::InvalidPath),
+        }
     }
 
     /// Saves the current configuration to the default config path.
@@ -190,7 +212,7 @@ impl<'a> NeedleConfig {
     }
 
     fn config_file(create_dir: bool) -> NeedleErr<PathBuf> {
-        Self::config_path(create_dir, Some(Self::CONFIG_FILE))
+        Self::config_path(create_dir, true, Some(Self::CONFIG_FILE))
     }
 
     fn write(file: &Path) -> NeedleErr<()> {
@@ -229,6 +251,8 @@ impl Default for NeedleConfig {
     fn default() -> Self {
         Self {
             background_color: [0.0, 0.0, 0.0, 1.0],
+            overlays: None,
+            window: None,
             time: TimeConfig {
                 format: TimeFormat::HourMinSec,
                 font: None,
@@ -263,6 +287,17 @@ impl Display for NeedleConfig {
             self.background_color[2],
             self.background_color[3]
         )?;
+        if let Some(window) = &self.window {
+            writeln!(f, "{}[window]", Self::NEWLINE)?;
+            writeln!(f, "{}", window)?;
+        }
+        if let Some(overlays) = &self.overlays {
+            writeln!(f, "overlays = [ ")?;
+            for overlay in overlays {
+                writeln!(f, "{}{{ {} }},", Self::INDENT, overlay)?;
+            }
+            writeln!(f, "]")?;
+        }
         writeln!(f, "{}[time]", Self::NEWLINE)?;
         writeln!(f, "{}", self.time)?;
         writeln!(f, "{}[fps]", Self::NEWLINE)?;

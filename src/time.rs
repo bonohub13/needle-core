@@ -8,13 +8,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy, Deserialize)]
 pub enum TimeFormat {
+    #[default]
     HourMinSec,
     HourMinSecMSec,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq)]
 pub enum OpMode {
     Clock,
     CountDownTimer(Duration),
@@ -50,7 +51,7 @@ impl Time {
     /// Get current operation mode of Time.
     #[inline]
     pub fn mode(&self) -> OpMode {
-        self.mode.clone()
+        self.mode
     }
 
     /// Set the operation mode of Time.

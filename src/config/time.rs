@@ -6,7 +6,7 @@ use crate::TimeFormat;
 use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct TimeConfig {
     /// Time text visualization format
     pub format: TimeFormat,

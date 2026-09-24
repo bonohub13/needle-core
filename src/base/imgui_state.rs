@@ -18,15 +18,19 @@ use winit::window::{Window, WindowId};
 #[derive(Clone, Copy)]
 pub enum ImguiMode {
     Background,
+    Window,
     ClockTimer,
     Fps,
+    Overlay,
 }
 
 impl ImguiMode {
     pub const BACKGROUND: i8 = 0;
-    pub const CLOCK_TIMER: i8 = 1;
-    pub const FPS: i8 = 2;
-    pub const MAX: i8 = Self::FPS;
+    pub const WINDOW: i8 = 1;
+    pub const CLOCK_TIMER: i8 = 2;
+    pub const FPS: i8 = 3;
+    pub const OVERLAY: i8 = 4;
+    pub const MAX: i8 = Self::OVERLAY;
 }
 
 macro_rules! imgui_mode_from {
@@ -34,13 +38,17 @@ macro_rules! imgui_mode_from {
         impl From<ImguiMode> for $type {
             fn from(mode: ImguiMode) -> Self {
                 const BACKGROUND: $type = ImguiMode::BACKGROUND as $type;
+                const WINDOW: $type = ImguiMode::WINDOW as $type;
                 const CLOCK_TIMER: $type = ImguiMode::CLOCK_TIMER as $type;
                 const FPS: $type = ImguiMode::FPS as $type;
+                const OVERLAY: $type = ImguiMode::OVERLAY as $type;
 
                 match mode {
                     ImguiMode::Background => BACKGROUND,
+                    ImguiMode::Window => WINDOW,
                     ImguiMode::ClockTimer => CLOCK_TIMER,
                     ImguiMode::Fps => FPS,
+                    ImguiMode::Overlay => OVERLAY,
                 }
             }
         }
@@ -48,13 +56,17 @@ macro_rules! imgui_mode_from {
         impl From<$type> for ImguiMode {
             fn from(val: $type) -> Self {
                 const BACKGROUND: $type = ImguiMode::BACKGROUND as $type;
+                const WINDOW: $type = ImguiMode::WINDOW as $type;
                 const CLOCK_TIMER: $type = ImguiMode::CLOCK_TIMER as $type;
                 const FPS: $type = ImguiMode::FPS as $type;
+                const OVERLAY: $type = ImguiMode::OVERLAY as $type;
 
                 match val {
                     BACKGROUND => ImguiMode::Background,
+                    WINDOW => ImguiMode::Window,
                     CLOCK_TIMER => ImguiMode::ClockTimer,
-                    FPS | _ => ImguiMode::Fps,
+                    FPS => ImguiMode::Fps,
+                    OVERLAY | _ => ImguiMode::Overlay,
                 }
             }
         }
@@ -72,8 +84,10 @@ impl Display for ImguiMode {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Background => write!(f, "Background"),
+            Self::Window => write!(f, "Window"),
             Self::ClockTimer => write!(f, "Clock/Timer"),
             Self::Fps => write!(f, "FPS"),
+            Self::Overlay => write!(f, "Overlay"),
         }
     }
 }

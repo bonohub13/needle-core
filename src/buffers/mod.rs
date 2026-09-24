@@ -1,9 +1,11 @@
 // Copyright 2025 Kensuke Saito
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+mod overlay;
 mod ubo;
 mod vertex;
 
+pub use overlay::*;
 pub use ubo::*;
 pub use vertex::*;
 

@@ -6,6 +6,15 @@ use glyphon::{Buffer, FontSystem, SwashCache, TextAtlas, Viewport};
 use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
+pub struct TextRendererDescriptor<'a> {
+    pub config: &'a Text,
+    pub font: Option<String>,
+    pub font_size: PhysicalSize<u32>,
+    pub scale_factor: f32,
+    pub format: wgpu::TextureFormat,
+    pub depth_stencil: Option<wgpu::DepthStencilState>,
+}
+
 pub struct TextRenderer {
     fonts: Fonts,
     system: FontSystem,
@@ -14,28 +23,20 @@ pub struct TextRenderer {
     atlas: TextAtlas,
     renderer: glyphon::TextRenderer,
     buffer: Buffer,
-    config: Text,
-    size: PhysicalSize<u32>,
+    pub(crate) config: Text,
+    pub(crate) size: PhysicalSize<u32>,
 }
 
 impl TextRenderer {
     /// Creates new instance of TextRenderer.
-    pub fn new(
-        state: &State,
-        config: &Text,
-        font: Option<String>,
-        size: &PhysicalSize<u32>,
-        scale_factor: f64,
-        format: wgpu::TextureFormat,
-        depth_stencil: Option<wgpu::DepthStencilState>,
-    ) -> NeedleErr<Self> {
+    pub fn new(state: &State, desc: &TextRendererDescriptor) -> NeedleErr<Self> {
         let mut fonts = Fonts::new();
-        let mut system = match font {
+        let mut system = match &desc.font {
             Some(font_name) => {
                 let font = {
                     fonts.query_fonts(Some(FontTypes::Monospace))?;
 
-                    fonts.read(&font_name)?
+                    fonts.read(font_name)?
                 };
 
                 let mut system = FontSystem::new_with_fonts([font]);
@@ -49,18 +50,18 @@ impl TextRenderer {
         let swash_cache = SwashCache::new();
         let cache = glyphon::Cache::new(state.device());
         let viewport = Viewport::new(state.device(), &cache);
-        let mut atlas = TextAtlas::new(state.device(), state.queue(), &cache, format);
+        let mut atlas = TextAtlas::new(state.device(), state.queue(), &cache, desc.format);
         let renderer = glyphon::TextRenderer::new(
             &mut atlas,
             state.device(),
             wgpu::MultisampleState::default(),
-            depth_stencil,
+            desc.depth_stencil.clone(),
         );
         let mut buffer = Buffer::new(&mut system, glyphon::Metrics::new(80.0, 60.0));
-        let physical_width = (size.width as f64 * scale_factor) as f32;
-        let physical_height = (size.height as f64 * scale_factor) as f32;
+        let font_size = glm::vec2(desc.font_size.width as f32, desc.font_size.height as f32)
+            * desc.scale_factor;
 
-        buffer.set_size(&mut system, Some(physical_width), Some(physical_height));
+        buffer.set_size(&mut system, Some(font_size.x), Some(font_size.y));
         buffer.shape_until_scroll(&mut system, false);
 
         Ok(Self {
@@ -71,8 +72,8 @@ impl TextRenderer {
             atlas,
             renderer,
             buffer,
-            config: *config,
-            size: *size,
+            config: *desc.config,
+            size: desc.font_size,
         })
     }
 

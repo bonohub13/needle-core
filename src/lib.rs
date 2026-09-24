@@ -41,7 +41,7 @@ pub fn version_info() -> String {
 }
 
 /// Labels for wgpu/imgui objects in needle
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum NeedleLabel<'a> {
     ImguiWindow(&'a str),
     Device(&'a str),

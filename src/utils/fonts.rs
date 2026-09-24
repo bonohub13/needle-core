@@ -189,11 +189,8 @@ impl Fonts {
     }
 
     fn search_fonts() -> NeedleErr<Box<[PathBuf]>> {
-        match NeedleConfig::config_path(true, Some(Self::FONT_SUBDIR)) {
-            Ok(path) => {
-                NeedleConfig::create_dir(&path)?;
-                Self::query_files(path)
-            }
+        match NeedleConfig::config_path(true, false, Some(Self::FONT_SUBDIR)) {
+            Ok(path) => Self::query_files(path),
             Err(err) => Err(NeedleError::FailedToSearchDir(err.into())),
         }
     }
