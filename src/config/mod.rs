@@ -139,32 +139,40 @@ impl<'a> NeedleConfig {
         relative_path: Option<&str>,
     ) -> NeedleErr<PathBuf> {
         let relative_path = match relative_path {
-            Some(path) => Ok(path.split("/").collect::<Vec<_>>()),
-            None => Err(NeedleError::InvalidPath),
-        }?;
+            Some(path) => path.split("/").collect::<Vec<_>>(),
+            None => vec![],
+        };
 
         match ProjectDirs::from("com", "bonohub13", "needle") {
             Some(app_dir) => {
-                let config_dir = app_dir.config_dir().join(
-                    if is_file {
-                        &relative_path[..relative_path.len() - 1]
+                let relative_path_index = if is_file {
+                    if relative_path.len() <= 1 {
+                        0
                     } else {
-                        &relative_path
+                        relative_path.len() - 1
                     }
-                    .join("/"),
-                );
+                } else {
+                    relative_path.len()
+                };
+                let config_path = if relative_path_index == 0 {
+                    app_dir.config_dir().to_path_buf()
+                } else {
+                    app_dir
+                        .config_dir()
+                        .join(relative_path[..relative_path_index].join("/"))
+                };
 
-                if (!config_dir.exists()) && create_dir {
-                    match fs::create_dir_all(config_dir) {
+                if (!config_path.exists()) && create_dir {
+                    match fs::create_dir_all(&config_path) {
                         Ok(_) => Ok(()),
                         Err(err) => Err(NeedleError::FailedToCreateDirectory(err.into())),
                     }?;
                 }
 
-                Ok(if is_file {
-                    config_dir.join(relative_path[relative_path.len() - 1])
+                Ok(if !is_file || relative_path.is_empty() {
+                    config_path
                 } else {
-                    config_dir
+                    config_path.join(relative_path[relative_path_index])
                 })
             }
             None => return Err(NeedleError::InvalidPath),

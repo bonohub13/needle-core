@@ -33,10 +33,12 @@ impl Overlay {
         } else {
             let vertex = NeedleConfig::config_path(
                 false,
+                true,
                 Some(&format!("{}/{}", Self::SHADER_BASE, self.vertex_shader)),
             )?;
             let fragment = NeedleConfig::config_path(
                 false,
+                true,
                 Some(&format!("{}/{}", Self::SHADER_BASE, self.fragment_shader)),
             )?;
 
