@@ -137,17 +137,14 @@ impl ImguiState {
         SetupFn: FnOnce(&mut imgui::Ui, &mut ImguiMode) -> Result<(), Err>,
         Err: StdError + Into<Box<dyn StdError>>,
     {
-        match self.platform.prepare_frame(self.context.io_mut(), window) {
-            Ok(_) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToPrepareUiFrame(err.into())),
-        }?;
+        self.platform
+            .prepare_frame(self.context.io_mut(), window)
+            .map_err(|err| NeedleError::FailedToPrepareUiFrame(err.into()))?;
         let ui = self.context.new_frame();
 
         if self.show_imgui {
-            match setup(ui, &mut self.settings_mode) {
-                Ok(_) => Ok(()),
-                Err(err) => Err(NeedleError::FailedToSetupUi(err.into())),
-            }?;
+            setup(ui, &mut self.settings_mode)
+                .map_err(|err| NeedleError::FailedToSetupUi(err.into()))?;
         }
 
         if self.last_cursor != ui.mouse_cursor() {
@@ -177,15 +174,14 @@ impl ImguiState {
             occlusion_query_set: None,
         });
 
-        match self.renderer.render(
-            self.context.render(),
-            state.queue(),
-            state.device(),
-            &mut render_pass,
-        ) {
-            Ok(_) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToRenderUi(err.into())),
-        }?;
+        self.renderer
+            .render(
+                self.context.render(),
+                state.queue(),
+                state.device(),
+                &mut render_pass,
+            )
+            .map_err(|err| NeedleError::FailedToRenderUi(err.into()))?;
 
         drop(render_pass);
 

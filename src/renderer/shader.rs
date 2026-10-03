@@ -73,16 +73,15 @@ impl Shader {
     fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
         const BYTE_ALIGNMENT: usize = 4; // Check and enforce 4byte alignment
 
-        let mut reader = match OpenOptions::new().read(true).open(path) {
-            Ok(file) => Ok(file),
-            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
-        }?;
+        let mut reader = OpenOptions::new()
+            .read(true)
+            .open(path)
+            .map_err(|err| NeedleError::FailedToReadShader(err.into()))?;
         let mut buffer = vec![];
 
-        match reader.read_to_end(&mut buffer) {
-            Ok(_) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToReadShader(err.into())),
-        }?;
+        reader
+            .read_to_end(&mut buffer)
+            .map_err(|err| NeedleError::FailedToReadShader(err.into()))?;
         if buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
             // Append 0 to buffer to force 4byte alignment
             buffer.extend(std::iter::repeat_n(0, buffer.len() % BYTE_ALIGNMENT));
@@ -106,10 +105,7 @@ impl ShaderRenderer {
     /// Vertex buffer must be passed, however index buffer is optional.
     /// For further specifications, refer to ShaderRendererDescriptor.
     pub fn new(state: &State, desc: &ShaderRendererDescriptor) -> NeedleErr<Self> {
-        let label = match desc.label {
-            Some(label) => label.to_string(),
-            None => "Render".to_string(),
-        };
+        let label = desc.label.unwrap_or("Render");
         let bind_group_layouts = desc
             .bind_group_layouts
             .iter()
@@ -119,7 +115,7 @@ impl ShaderRenderer {
             state
                 .device()
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some(&NeedleLabel::PipelineLayout(&label).to_string()),
+                    label: Some(&NeedleLabel::PipelineLayout(label).to_string()),
                     bind_group_layouts: &bind_group_layouts,
                     push_constant_ranges: &[],
                 });
@@ -128,7 +124,7 @@ impl ShaderRenderer {
             state
                 .device()
                 .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: Some(&NeedleLabel::Pipeline(&label).to_string()),
+                    label: Some(&NeedleLabel::Pipeline(label).to_string()),
                     layout: Some(&render_pipeline_layout),
                     vertex: wgpu::VertexState {
                         module: &shader.vertex,

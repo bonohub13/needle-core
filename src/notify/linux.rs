@@ -38,33 +38,24 @@ where
     Backend: DialogBox + backends::Backend,
 {
     fn info(&self, msg: &str) -> NeedleErr<()> {
-        match Message::new(msg)
+        Message::new(msg)
             .title(self.title.as_ref())
             .show_with(&self.backend)
-        {
-            Ok(()) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToShowNotification(err)),
-        }
+            .map_err(NeedleError::FailedToShowNotification)
     }
 
     fn warn(&self, msg: &str) -> NeedleErr<()> {
-        match Message::new(msg)
+        Message::new(msg)
             .title(self.title.as_ref())
             .show_with(&self.backend)
-        {
-            Ok(()) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToShowNotification(err)),
-        }
+            .map_err(NeedleError::FailedToShowNotification)
     }
 
     fn error(&self, msg: &str) -> NeedleErr<()> {
-        match Message::new(msg)
+        Message::new(msg)
             .title(self.title.as_ref())
             .show_with(&self.backend)
-        {
-            Ok(()) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToShowNotification(err)),
-        }
+            .map_err(NeedleError::FailedToShowNotification)
     }
 }
 

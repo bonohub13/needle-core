@@ -61,15 +61,16 @@ impl<'a> BindGroupBuilder<'a> {
 
     /// Build new instance of BindGroup
     pub fn build(&self, device: &wgpu::Device, label: NeedleLabel) -> NeedleErr<BindGroup> {
-        let bind_group = match self.layout {
-            Some(layout) => Ok(device.create_bind_group(&wgpu::BindGroupDescriptor {
+        if let Some(layout) = self.layout {
+            let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some(&label.to_string()),
                 layout: layout.layout(),
                 entries: &self.entries,
-            })),
-            None => Err(NeedleError::InvalidBindingBufferLayout),
-        }?;
+            });
 
-        Ok(BindGroup { bind_group })
+            Ok(BindGroup { bind_group })
+        } else {
+            Err(NeedleError::InvalidBindingBufferLayout)
+        }
     }
 }

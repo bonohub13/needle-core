@@ -30,23 +30,21 @@ pub struct TextRenderer {
 impl TextRenderer {
     /// Creates new instance of TextRenderer.
     pub fn new(state: &State, desc: &TextRendererDescriptor) -> NeedleErr<Self> {
-        let mut fonts = Fonts::new();
-        let mut system = match &desc.font {
-            Some(font_name) => {
-                let font = {
-                    fonts.query_fonts(Some(FontTypes::Monospace))?;
+        let (fonts, mut system) = if let Some(font_name) = &desc.font {
+            let mut fonts = Fonts::new();
+            let font = {
+                fonts.query_fonts(Some(FontTypes::Monospace))?;
 
-                    fonts.read(font_name)?
-                };
+                fonts.read(font_name)
+            }?;
+            let mut system = FontSystem::new_with_fonts([font]);
 
-                let mut system = FontSystem::new_with_fonts([font]);
+            system.db_mut().set_monospace_family(font_name);
 
-                system.db_mut().set_monospace_family(font_name);
-
-                system
-            }
-            None => FontSystem::new(),
-        };
+            Ok((fonts, system))
+        } else {
+            Ok((Fonts::new(), FontSystem::new()))
+        }?;
         let swash_cache = SwashCache::new();
         let cache = glyphon::Cache::new(state.device());
         let viewport = Viewport::new(state.device(), &cache);
@@ -186,25 +184,18 @@ impl super::Renderer for TextRenderer {
             &mut self.swash_cache,
         );
 
-        match result {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NeedleError::RendererUpdateFailure(e.into())),
-        }
+        result.map_err(|err| NeedleError::RendererUpdateFailure(err.into()))
     }
 
     fn render(&mut self, render_pass: &mut RenderPass) -> NeedleErr<()> {
-        match self
-            .renderer
+        self.renderer
             .render(&self.atlas, &self.viewport, render_pass)
-        {
-            Ok(_) => Ok(()),
-            Err(err) => match err {
-                glyphon::RenderError::RemovedFromAtlas => Err(NeedleError::RemovedFromAtlas),
+            .map_err(|err| match err {
+                glyphon::RenderError::RemovedFromAtlas => NeedleError::RemovedFromAtlas,
                 glyphon::RenderError::ScreenResolutionChanged => {
-                    Err(NeedleError::ScreenResolutionChanged)
+                    NeedleError::ScreenResolutionChanged
                 }
-            },
-        }
+            })
     }
 }
 

@@ -35,28 +35,8 @@ impl Buffer {
         Uint: Sized,
     {
         let device = state.device();
-        let index = if let Some(indices) = indices {
-            indices.len()
-        } else {
-            vertices.len()
-        } as u32;
-        let (buffer, offset) = match indices {
-            Some(indices) => {
-                let (contents, offset): (Vec<u8>, u64) = {
-                    let vertices = unsafe { utils::data_into_bytes(vertices) };
-                    let indices = unsafe { utils::data_into_bytes(indices) };
-
-                    ([vertices, indices].concat(), vertices.len() as u64)
-                };
-                let buffer = device.create_buffer_init(&BufferInitDescriptor {
-                    label: Some(&label.to_string()),
-                    contents: &contents,
-                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::INDEX,
-                });
-
-                (buffer, offset)
-            }
-            None => {
+        let (index_format, index, buffer, offset) = indices.map_or(
+            {
                 let contents = unsafe { utils::data_into_bytes(vertices) };
                 let buffer = device.create_buffer_init(&BufferInitDescriptor {
                     label: Some(&label.to_string()),
@@ -64,16 +44,26 @@ impl Buffer {
                     usage: wgpu::BufferUsages::VERTEX,
                 });
 
-                (buffer, contents.len() as u64)
-            }
-        };
-        let index_format = indices.map(|_| {
-            if size_of::<Uint>() == size_of::<u16>() {
-                wgpu::IndexFormat::Uint16
-            } else {
-                wgpu::IndexFormat::Uint32
-            }
-        });
+                (None, vertices.len() as u32, buffer, contents.len() as u64)
+            },
+            |indices| {
+                let format = if size_of::<Uint>() == size_of::<u16>() {
+                    wgpu::IndexFormat::Uint16
+                } else {
+                    wgpu::IndexFormat::Uint32
+                };
+                let index = indices.len();
+                let vertices = unsafe { utils::data_into_bytes(vertices) };
+                let indices = unsafe { utils::data_into_bytes(indices) };
+                let buffer = device.create_buffer_init(&BufferInitDescriptor {
+                    label: Some(&label.to_string()),
+                    contents: &[vertices, indices].concat(),
+                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::INDEX,
+                });
+
+                (Some(format), index as u32, buffer, vertices.len() as u64)
+            },
+        );
 
         Self {
             buffer,

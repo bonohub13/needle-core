@@ -28,31 +28,24 @@ impl<'a> State<'a> {
         });
 
         // Surface
-        let surface = match instance.create_surface(window) {
-            Ok(surface) => Ok(surface),
-            Err(e) => Err(NeedleError::FailedToCreateSurface(e)),
-        }?;
+        let surface = instance
+            .create_surface(window)
+            .map_err(NeedleError::FailedToCreateSurface)?;
 
         // Device and Queue
         let adapters = instance.enumerate_adapters(wgpu::Backends::all());
-        let adapter = match adapters
+        let adapter = adapters
             .iter()
             .find(|adapter| adapter.is_surface_supported(&surface))
-        {
-            Some(adapter) => Ok(adapter),
-            None => Err(NeedleError::FailedToFindValidAdapter),
-        }?;
-        let (device, queue) = match adapter
+            .ok_or(NeedleError::FailedToFindValidAdapter)?;
+        let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: None,
                 required_features: wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                 ..Default::default()
             })
             .await
-        {
-            Ok((device, queue)) => Ok((device, queue)),
-            Err(err) => Err(NeedleError::FailedToRequestDevice(err)),
-        }?;
+            .map_err(NeedleError::FailedToRequestDevice)?;
 
         // Config
         let config = {
@@ -165,19 +158,12 @@ impl<'a> State<'a> {
     ///
     /// These errors are translated from `wgpu::SurfaceError` into `NeedleError`
     pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
-        match self.surface.get_current_texture() {
-            Ok(texture) => Ok(texture),
-            Err(err) => {
-                let err = match err {
-                    wgpu::SurfaceError::Timeout => NeedleError::Timeout,
-                    wgpu::SurfaceError::Outdated => NeedleError::Outdated,
-                    wgpu::SurfaceError::Lost => NeedleError::Lost,
-                    wgpu::SurfaceError::OutOfMemory => NeedleError::OutOfMemory,
-                    wgpu::SurfaceError::Other => NeedleError::Other,
-                };
-
-                Err(err)
-            }
-        }
+        self.surface.get_current_texture().map_err(|err| match err {
+            wgpu::SurfaceError::Timeout => NeedleError::Timeout,
+            wgpu::SurfaceError::Outdated => NeedleError::Outdated,
+            wgpu::SurfaceError::Lost => NeedleError::Lost,
+            wgpu::SurfaceError::OutOfMemory => NeedleError::OutOfMemory,
+            wgpu::SurfaceError::Other => NeedleError::Other,
+        })
     }
 }
