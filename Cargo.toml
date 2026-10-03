@@ -26,3 +26,9 @@ win-msgbox = "0.2.1"
 [profile.release]
 strip = "debuginfo"
 lto = "fat"
+
+[target.'cfg(linux)'.dev]
+rustflags = ["-C", "linker=./scripts/linker-wrapper.sh mold"]
+
+[target.'cfg(linux)'.release]
+rustflags = ["-C", "linker=./scripts/linker-wrapper.sh lld"]
