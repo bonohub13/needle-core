@@ -1,17 +1,11 @@
 CARGO := cargo
 DOCKER := docker
 OSV_SCANNER := osv-scanner
-LLD ?= ld
 
 CARGO_REGISTRY ?= ${HOME}/.cargo/registry
-RUSTFLAGS ?= ""
 DOCKER_IMAGE ?= buildenv
 TAG ?= base
 SBOM_FILE ?= sbom.spdx.json
-
-ifeq ($(shell command -v ${LLD} 2>/dev/null),)
-	RUSTFLAGS += "-C link-arg=-fuse-ld=${LLD}"
-endif
 
 pkg:
 	@CMD="make generate-sbom" make docker-exec
@@ -37,8 +31,12 @@ clean:
 	$(CARGO) clean
 
 build:
-	LLD=mold
-	@RUSTFLAGS=${RUSTFLAGS} $(CARGO) build --offline
+	if command -v mold 2>/dev/null; \
+	then \
+		RUSTFLAGS="-C link-arg=-fuse-ld=mold" $(CARGO) build --offline; \
+	else \
+		$(CARGO) build --offline; \
+	fi
 
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
@@ -52,7 +50,7 @@ clippy-docker:
 
 build-docker: clippy-docker
 	@TAG=linux CMD="make build" make docker-exec
-	@TAG=windows CMD="RUSTFLAGS=${RUSTFLAGS} cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
+	@TAG=windows CMD="cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
 
 generate-sbom-docker:
 	@TAG=linux CMD="make generate-sbom" make docker-exec
