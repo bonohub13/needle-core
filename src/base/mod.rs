@@ -11,10 +11,11 @@ use winit::{dpi::PhysicalSize, window::Window};
 pub use imgui_state::{ImguiMode, ImguiState};
 
 pub struct State<'a> {
-    size: PhysicalSize<u32>,
-    surface: Surface<'a>,
     device: Device,
     queue: Queue,
+    surface: Surface<'a>,
+    instance: wgpu::Instance,
+    size: PhysicalSize<u32>,
     config: SurfaceConfiguration,
 }
 
@@ -85,6 +86,7 @@ impl<'a> State<'a> {
 
         Ok(Self {
             size,
+            instance,
             surface,
             device,
             queue,
@@ -141,9 +143,14 @@ impl<'a> State<'a> {
 
         render_func(&mut encoder)?;
 
-        self.queue.submit(std::iter::once(encoder.finish()));
-
-        Ok(())
+        let index = self.queue.submit(Some(encoder.finish()));
+        self.device
+            .poll(wgpu::PollType::Wait {
+                submission_index: Some(index),
+                timeout: None,
+            })
+            .map(|_| ())
+            .map_err(|err| NeedleError::RendererUpdateFailure(err.into()))
     }
 
     /// Get the current texture from Surface.
@@ -155,14 +162,33 @@ impl<'a> State<'a> {
     ///
     /// These errors are translated from `wgpu::SurfaceError` into `NeedleError`
     #[inline]
-    pub fn get_current_texture(&self) -> NeedleErr<wgpu::SurfaceTexture> {
+    pub fn get_current_texture(&mut self, window: Arc<Window>) -> NeedleErr<wgpu::SurfaceTexture> {
         match self.surface.get_current_texture() {
-            wgpu::CurrentSurfaceTexture::Success(texture)
-            | wgpu::CurrentSurfaceTexture::Suboptimal(texture) => Ok(texture),
-            wgpu::CurrentSurfaceTexture::Timeout => Err(NeedleError::Timeout),
-            wgpu::CurrentSurfaceTexture::Outdated => Err(NeedleError::Outdated),
-            wgpu::CurrentSurfaceTexture::Lost => Err(NeedleError::Lost),
-            _ => Err(NeedleError::Other),
+            wgpu::CurrentSurfaceTexture::Success(texture) => Ok(texture),
+            wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => {
+                window.request_redraw();
+
+                Err(NeedleError::Timeout)
+            }
+            wgpu::CurrentSurfaceTexture::Suboptimal(_) | wgpu::CurrentSurfaceTexture::Outdated => {
+                self.surface.configure(&self.device, &self.config);
+                window.request_redraw();
+
+                Err(NeedleError::Outdated)
+            }
+            wgpu::CurrentSurfaceTexture::Lost => {
+                self.surface = self
+                    .instance
+                    .create_surface(window.clone())
+                    .map_err(NeedleError::FailedToCreateSurface)?;
+                self.surface.configure(&self.device, &self.config);
+                window.request_redraw();
+
+                Err(NeedleError::Lost)
+            }
+            wgpu::CurrentSurfaceTexture::Validation => {
+                panic!("[CRITICAL]: Validation error detected")
+            }
         }
     }
 }

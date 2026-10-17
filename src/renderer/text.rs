@@ -145,6 +145,7 @@ impl super::Renderer for TextRenderer {
     }
 
     fn update(&mut self, state: &State) {
+        self.buffer.shape_until_scroll(&mut self.system, false);
         self.viewport.update(
             state.queue(),
             glyphon::Resolution {

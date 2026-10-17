@@ -28,3 +28,7 @@ win-msgbox = "0.2.1"
 [profile.release]
 strip = "debuginfo"
 lto = "fat"
+
+[dev-dependencies]
+anyhow = "1.0.104"
+pollster = "1.0.1"
