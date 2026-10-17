@@ -19,7 +19,7 @@ pollster = "1.0.1"
 serde = {version = "1.0.215", features = ["derive"]}
 thiserror = "2.0.12"
 toml = "1.1"
-wgpu = "30"
+wgpu = { version = "30", features = ["spirv"] }
 winit = { version = "0.30" }
 
 [target.'cfg(windows)'.dependencies]

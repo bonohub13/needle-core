@@ -50,30 +50,24 @@ impl Shader {
     pub fn new(state: &State, desc: &ShaderDescriptor) -> NeedleErr<Self> {
         let vert_shader_code = Self::read_shader(&desc.vertex)?;
         let frag_shader_code = Self::read_shader(&desc.fragment)?;
-        let vertex = unsafe {
-            state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough {
-                    label: Some(desc.vertex_label.to_string().as_str()),
-                    spirv: Some(wgpu::util::make_spirv_raw(&vert_shader_code)),
-                    ..Default::default()
-                },
-            )
-        };
-        let fragment = unsafe {
-            state.device().create_shader_module_passthrough(
-                wgpu::ShaderModuleDescriptorPassthrough {
-                    label: Some(desc.fragment_label.to_string().as_str()),
-                    spirv: Some(wgpu::util::make_spirv_raw(&frag_shader_code)),
-                    ..Default::default()
-                },
-            )
-        };
+        let vertex = state
+            .device()
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some(desc.vertex_label.to_string().as_str()),
+                source: wgpu::ShaderSource::SpirV(std::borrow::Cow::Borrowed(&vert_shader_code)),
+            });
+        let fragment = state
+            .device()
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some(desc.vertex_label.to_string().as_str()),
+                source: wgpu::ShaderSource::SpirV(std::borrow::Cow::Borrowed(&frag_shader_code)),
+            });
 
         Ok(Self { vertex, fragment })
     }
 
-    fn read_shader(path: &Path) -> NeedleErr<Box<[u8]>> {
-        const BYTE_ALIGNMENT: usize = 4; // Check and enforce 4byte alignment
+    fn read_shader(path: &Path) -> NeedleErr<Box<[u32]>> {
+        const BYTE_ALIGNMENT: usize = size_of::<u32>(); // Check and enforce 4byte alignment
 
         let mut reader = OpenOptions::new()
             .read(true)
@@ -84,14 +78,30 @@ impl Shader {
         reader
             .read_to_end(&mut buffer)
             .map_err(|err| NeedleError::FailedToReadShader(err.into()))?;
-        if buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
+        if !buffer.len().is_multiple_of(BYTE_ALIGNMENT) {
             // Append 0 to buffer to force 4byte alignment
             buffer.extend(std::iter::repeat_n(0, buffer.len() % BYTE_ALIGNMENT));
         }
 
-        let buffer = Box::from_iter(buffer);
+        if buffer.as_ptr() as usize & BYTE_ALIGNMENT == 0 {
+            let u32_slice = unsafe {
+                std::slice::from_raw_parts(
+                    buffer.as_ptr() as *const u32,
+                    buffer.len() / size_of::<u32>(),
+                )
+            };
 
-        Ok(buffer)
+            Ok(u32_slice.into())
+        } else {
+            let u32_vec: Vec<u32> = buffer
+                .as_chunks::<{ size_of::<u32>() }>()
+                .0
+                .iter()
+                .map(|chunk| u32::from_le_bytes(*chunk))
+                .collect();
+
+            Ok(u32_vec.as_slice().into())
+        }
     }
 }
 
