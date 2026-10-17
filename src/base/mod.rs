@@ -26,30 +26,23 @@ impl<'a> State<'a> {
         let instance = wgpu::Instance::new(desc);
 
         // Surface
-        let surface = match instance.create_surface(window) {
-            Ok(surface) => Ok(surface),
-            Err(e) => Err(NeedleError::FailedToCreateSurface(e)),
-        }?;
+        let surface = instance
+            .create_surface(window)
+            .map_err(NeedleError::FailedToCreateSurface)?;
 
         // Device and Queue
         let adapters = instance.enumerate_adapters(wgpu::Backends::all()).await;
-        let adapter = match adapters
+        let adapter = adapters
             .iter()
             .find(|adapter| adapter.is_surface_supported(&surface))
-        {
-            Some(adapter) => Ok(adapter),
-            None => Err(NeedleError::FailedToFindValidAdapter),
-        }?;
-        let (device, queue) = match adapter
+            .ok_or(NeedleError::FailedToFindValidAdapter)?;
+        let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: None,
                 ..Default::default()
             })
             .await
-        {
-            Ok((device, queue)) => Ok((device, queue)),
-            Err(err) => Err(NeedleError::FailedToRequestDevice(err)),
-        }?;
+            .map_err(NeedleError::FailedToRequestDevice)?;
 
         // Config
         let config = {

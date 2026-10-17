@@ -6,6 +6,7 @@ RUN apt install -y golang-go
 
 RUN rustup update
 RUN rustup component add rustfmt
+RUN rustup component add clippy
 
 RUN cargo install cargo-sbom
 RUN cargo install cargo-cyclonedx

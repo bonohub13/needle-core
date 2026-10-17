@@ -21,10 +21,10 @@ impl Notify {
     where
         Opt: win_msgbox::Options,
     {
-        match msgbox.show() {
-            Ok(_) => Ok(()),
-            Err(err) => Err(NeedleError::FailedToShowWinNotification(err)),
-        }
+        msgbox
+            .show()
+            .map(|_| ())
+            .map_err(NeedleError::FailedToShowWinNotification)
     }
 }
 

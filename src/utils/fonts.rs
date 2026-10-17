@@ -152,10 +152,10 @@ impl Fonts {
                 .iter()
                 .for_each(|font| match font.font_type {
                     FontType::Needle => {
-                        if let Some(file) = font.font.split(Self::DIRECTORY_DELIMITER).last() {
-                            if let Some(font) = file.split(".").next() {
-                                output.push(font.to_string());
-                            }
+                        if let Some(file) = font.font.split(Self::DIRECTORY_DELIMITER).last()
+                            && let Some(font) = file.split(".").next()
+                        {
+                            output.push(font.to_string());
                         }
                     }
                     FontType::System => {
@@ -169,30 +169,26 @@ impl Fonts {
         }
     }
 
+    #[allow(dead_code)]
     fn query_files(path: PathBuf) -> NeedleErr<Box<[PathBuf]>> {
-        match fs::read_dir(path) {
-            Ok(paths) => {
-                let mut files = vec![];
-                for path in paths {
-                    let path = match path {
-                        Ok(path) => Ok(path.path()),
-                        Err(err) => Err(NeedleError::FailedToSearchDir(err.into())),
-                    }?;
+        let files = fs::read_dir(path)
+            .map(|paths| {
+                paths
+                    .map(|path| {
+                        path.map(|path| path.path())
+                            .map_err(|err| NeedleError::FailedToSearchDir(err.into()))
+                    })
+                    .collect::<NeedleErr<Vec<PathBuf>>>()
+            })
+            .map_err(|err| NeedleError::FailedToReadDir(err.into()))??;
 
-                    files.push(path);
-                }
-
-                Ok(files.into())
-            }
-            Err(err) => Err(NeedleError::FailedToReadDir(err.into())),
-        }
+        Ok(files.into())
     }
 
     fn search_fonts() -> NeedleErr<Box<[PathBuf]>> {
-        match NeedleConfig::config_path(true, false, Some(Self::FONT_SUBDIR)) {
-            Ok(path) => Self::query_files(path),
-            Err(err) => Err(NeedleError::FailedToSearchDir(err.into())),
-        }
+        NeedleConfig::config_path(true, false, Some(Self::FONT_SUBDIR))
+            .map(|path| std::slice::from_ref(&path).into())
+            .map_err(|err| NeedleError::FailedToSearchDir(err.into()))
     }
 }
 

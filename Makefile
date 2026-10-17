@@ -31,7 +31,12 @@ clean:
 	$(CARGO) clean
 
 build:
-	$(CARGO) build --release
+	if command -v mold 2>/dev/null; \
+	then \
+		RUSTFLAGS="-C link-arg=-fuse-ld=mold" $(CARGO) build --offline; \
+	else \
+		$(CARGO) build --offline; \
+	fi
 
 addlicense:
 	$(DOCKER) run --rm -it -v ${PWD}:/src ghcr.io/google/addlicense:latest \
@@ -44,7 +49,7 @@ clippy-docker:
 	@TAG=linux CMD="make clippy" make docker-exec
 
 build-docker: clippy-docker
-	@TAG=linux CMD="cargo build" make docker-exec
+	@TAG=linux CMD="make build" make docker-exec
 	@TAG=windows CMD="cargo xwin build --target=x86_64-pc-windows-msvc" make docker-exec
 
 generate-sbom-docker:
