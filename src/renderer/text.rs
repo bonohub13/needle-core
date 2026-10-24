@@ -11,6 +11,7 @@ pub struct TextRendererDescriptor<'a> {
     pub font: Option<String>,
     pub font_size: PhysicalSize<u32>,
     pub scale_factor: f32,
+    pub margin: f32,
     pub format: wgpu::TextureFormat,
     pub depth_stencil: Option<wgpu::DepthStencilState>,
 }
@@ -23,6 +24,7 @@ pub struct TextRenderer {
     atlas: TextAtlas,
     renderer: glyphon::TextRenderer,
     buffer: Buffer,
+    margin: f32,
     pub(crate) config: Text,
     pub(crate) size: PhysicalSize<u32>,
 }
@@ -70,6 +72,7 @@ impl TextRenderer {
             atlas,
             renderer,
             buffer,
+            margin: desc.margin,
             config: *desc.config,
             size: desc.font_size,
         })
@@ -144,7 +147,7 @@ impl super::Renderer for TextRenderer {
         self.size = *size
     }
 
-    fn update(&mut self, state: &State) {
+    fn update(&mut self, state: &State) -> NeedleErr<()> {
         self.buffer.shape_until_scroll(&mut self.system, false);
         self.viewport.update(
             state.queue(),
@@ -152,40 +155,40 @@ impl super::Renderer for TextRenderer {
                 width: state.surface_config().width,
                 height: state.surface_config().height,
             },
-        )
-    }
-
-    fn prepare(&mut self, margin: f32, state: &State) -> NeedleErr<()> {
-        let (left, top) = self.config.position(&self.size, &self.text_size(), margin);
-        let result = self.renderer.prepare(
-            state.device(),
-            state.queue(),
-            &mut self.system,
-            &mut self.atlas,
-            &self.viewport,
-            [glyphon::TextArea {
-                buffer: &self.buffer,
-                left,
-                top,
-                scale: self.config.scale,
-                bounds: glyphon::TextBounds {
-                    left: 0,
-                    top: 0,
-                    right: self.size.width as i32,
-                    bottom: self.size.height as i32,
-                },
-                default_color: glyphon::Color::rgba(
-                    self.config.color[0],
-                    self.config.color[1],
-                    self.config.color[2],
-                    self.config.color[3],
-                ),
-                custom_glyphs: &[],
-            }],
-            &mut self.swash_cache,
         );
 
-        result.map_err(|err| NeedleError::RendererUpdateFailure(err.into()))
+        let (left, top) = self
+            .config
+            .position(&self.size, &self.text_size(), self.margin);
+        self.renderer
+            .prepare(
+                state.device(),
+                state.queue(),
+                &mut self.system,
+                &mut self.atlas,
+                &self.viewport,
+                [glyphon::TextArea {
+                    buffer: &self.buffer,
+                    left,
+                    top,
+                    scale: self.config.scale,
+                    bounds: glyphon::TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: self.size.width as i32,
+                        bottom: self.size.height as i32,
+                    },
+                    default_color: glyphon::Color::rgba(
+                        self.config.color[0],
+                        self.config.color[1],
+                        self.config.color[2],
+                        self.config.color[3],
+                    ),
+                    custom_glyphs: &[],
+                }],
+                &mut self.swash_cache,
+            )
+            .map_err(|err| NeedleError::RendererUpdateFailure(err.into()))
     }
 
     fn render(&mut self, render_pass: &mut RenderPass) -> NeedleErr<()> {

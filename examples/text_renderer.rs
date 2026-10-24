@@ -51,8 +51,7 @@ impl App<'_> {
             })?;
 
             // Render logic
-            renderer.update(state);
-            renderer.prepare(1f32, state)?;
+            renderer.update(state)?;
             let texture = match state.get_current_texture(window.clone()) {
                 Ok(texture) => texture,
                 Err(err) => {
@@ -134,6 +133,7 @@ impl winit::application::ApplicationHandler for App<'_> {
                     font: None,
                     font_size: window.inner_size(),
                     scale_factor: 1f32,
+                    margin: 1f32,
                     format: state.surface_config().format,
                     depth_stencil: None,
                 },

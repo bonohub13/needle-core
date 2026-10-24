@@ -209,9 +209,7 @@ impl ShaderRenderer {
 impl super::Renderer for ShaderRenderer {
     fn resize(&mut self, _size: &PhysicalSize<u32>) {}
 
-    fn update(&mut self, _state: &State) {}
-
-    fn prepare(&mut self, _margin: f32, _state: &State) -> NeedleErr<()> {
+    fn update(&mut self, _state: &State) -> NeedleErr<()> {
         Ok(())
     }
 

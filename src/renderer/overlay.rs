@@ -113,12 +113,8 @@ impl OverlayRenderer {
 impl Renderer for OverlayRenderer {
     fn resize(&mut self, _size: &PhysicalSize<u32>) {}
 
-    fn update(&mut self, state: &State) {
+    fn update(&mut self, state: &State) -> NeedleErr<()> {
         self.text_renderer.update(state)
-    }
-
-    fn prepare(&mut self, margin: f32, state: &State) -> NeedleErr<()> {
-        self.text_renderer.prepare(margin, state)
     }
 
     fn render(&mut self, render_pass: &mut wgpu::RenderPass) -> NeedleErr<()> {

@@ -15,7 +15,6 @@ use winit::dpi::PhysicalSize;
 
 pub trait Renderer {
     fn resize(&mut self, size: &PhysicalSize<u32>);
-    fn update(&mut self, state: &State);
-    fn prepare(&mut self, margin: f32, state: &State) -> NeedleErr<()>;
+    fn update(&mut self, state: &State) -> NeedleErr<()>;
     fn render(&mut self, render_pass: &mut RenderPass) -> NeedleErr<()>;
 }
