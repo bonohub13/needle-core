@@ -6,7 +6,6 @@ mod bind_group;
 mod buffers;
 mod config;
 mod error;
-mod notify;
 mod renderer;
 mod texture;
 mod time;
@@ -17,16 +16,10 @@ pub use bind_group::*;
 pub use buffers::*;
 pub use config::*;
 pub use error::*;
-pub use notify::NotifyType;
 pub use renderer::*;
 pub use texture::*;
 pub use time::*;
 pub use utils::*;
-
-#[cfg(target_os = "windows")]
-pub use notify::Notify;
-#[cfg(target_os = "linux")]
-pub use notify::{DialogBackend, Notify};
 
 use std::fmt::{Display, Formatter, Result};
 
