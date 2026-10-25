@@ -87,14 +87,6 @@ pub enum NeedleError {
     #[error("Filesystem | Failed to search for files/directories (Path: {0})")]
     FailedToSearchDir(Box<dyn StdError>),
 
-    // Notification related errors
-    #[cfg(target_os = "windows")]
-    #[error("Notify | Failed to show notification (Error code: {0})")]
-    FailedToShowWinNotification(u32),
-    #[cfg(target_os = "linux")]
-    #[error("Notify | Failed to show notification ({0})")]
-    FailedToShowNotification(dialog::Error),
-
     #[error("Imgui | Failed to prepare frame for UI ({0})")]
     FailedToPrepareUiFrame(Box<dyn StdError>),
     #[error("Imgui | Failed to setup UI ({0})")]
@@ -107,7 +99,9 @@ pub enum NeedleError {
     InitializationError,
     #[error("Other | Invalid Regex ({0})")]
     InvalidRegex(Box<dyn StdError>),
-    #[error("Other | Unknown error has been detected! Please file an issue to the repository if possible.")]
+    #[error(
+        "Other | Unknown error has been detected! Please file an issue to the repository if possible."
+    )]
     Other,
 }
 
